@@ -74,7 +74,7 @@
 		});
 
 		$(document).on('click', '#lw_aio_delete_record', function (event) {
-			if (!confirm(__('Are you sure you want to delete this record?', 'lw_all_in_one'))) {
+			if (!confirm(__('Are you sure you want to delete this record?', 'lw-all-in-one'))) {
 				event.preventDefault();
 			}
 		});
@@ -83,7 +83,7 @@
 			var actionTop = $("select[name=action]").val();
 			var actionBottom = $("select[name=action2]").val();
 			if ((actionTop == 'bulk-delete-cf7' || actionTop == 'bulk-delete-ga') || (actionBottom == 'bulk-delete-cf7' || actionBottom == 'bulk-delete-ga')) {
-				if (!confirm(__('Are you sure you want to delete this record?', 'lw_all_in_one'))) {
+				if (!confirm(__('Are you sure you want to delete this record?', 'lw-all-in-one'))) {
 					event.preventDefault();
 				}
 			}
@@ -91,7 +91,7 @@
 
 		$(document).on('click', '#lw_aio_reset_data', function (event) {
 			event.preventDefault();
-			if (confirm(__('Are you sure you want to reset plugin options?', 'lw_all_in_one'))) {
+			if (confirm(__('Are you sure you want to reset plugin options?', 'lw-all-in-one'))) {
 				var form_data = {
 					action: 'lw_all_in_one_reset_plugin_options',
 					security: lw_all_in_one_admin_ajax_object.security,

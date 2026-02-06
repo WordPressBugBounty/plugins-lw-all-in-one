@@ -62,7 +62,7 @@ class Lw_All_In_One_Admin {
     if (preg_match('/page_lw_all_in_one/', $hook)) {
       $min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
       wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/lw-all-in-one-admin'.$min.'.js', array('jquery', 'wp-i18n', 'wp-color-picker'), $this->version, false);
-      wp_set_script_translations($this->plugin_name, 'lw_all_in_one');
+      wp_set_script_translations($this->plugin_name, 'lw-all-in-one');
       wp_localize_script($this->plugin_name, 'lw_all_in_one_admin_ajax_object',
         array(
           'ajaxurl' => admin_url('admin-ajax.php'),
@@ -76,7 +76,7 @@ class Lw_All_In_One_Admin {
 
   public function lw_all_in_one_add_admin_menu() {
 
-    add_menu_page(__('LocalWeb All In One Options', 'lw_all_in_one'), __('LW AIO Options', 'lw_all_in_one'), 'manage_options', $this->plugin_name, array($this, 'display_plugin_setup_page'), trailingslashit(plugin_dir_url(__FILE__)) . 'img/lw-fav.png', 81
+    add_menu_page(__('LocalWeb All In One Options', 'lw-all-in-one'), __('LW AIO Options', 'lw-all-in-one'), 'manage_options', $this->plugin_name, array($this, 'display_plugin_setup_page'), trailingslashit(plugin_dir_url(__FILE__)) . 'img/lw-fav.png', 81
     );
   }
 
@@ -86,7 +86,7 @@ class Lw_All_In_One_Admin {
 
   public function lw_all_in_one_add_action_links($links) {
     $settings_link = array(
-      '<a href="' . admin_url('admin.php?page=' . $this->plugin_name) . '">' . __('Settings', 'lw_all_in_one') . '</a>',
+      '<a href="' . admin_url('admin.php?page=' . $this->plugin_name) . '">' . __('Settings', 'lw-all-in-one') . '</a>',
     );
     return array_merge($settings_link, $links);
   }
@@ -105,7 +105,7 @@ class Lw_All_In_One_Admin {
       add_settings_error(
         $this->plugin_name,
         $this->plugin_name . '_ga_fields_tracking_id_not_valid',
-        __('Tracking ID is NOT valid!', 'lw_all_in_one'),
+        __('Tracking ID is NOT valid!', 'lw-all-in-one'),
         'error'
       );
     } else {
@@ -151,7 +151,7 @@ class Lw_All_In_One_Admin {
         add_settings_error(
           $this->plugin_name,
           $this->plugin_name . '_settings_not_updated_error',
-          _e('Something went wrong!', 'lw_all_in_one'),
+          esc_html__('Something went wrong!', 'lw-all-in-one'),
           'error'
         );
       } elseif ((isset($data->response)) && $data->response == 'success') {
@@ -161,7 +161,7 @@ class Lw_All_In_One_Admin {
         add_settings_error(
           $this->plugin_name,
           $this->plugin_name . '_settings_not_updated_danger',
-          ($data != 'null') ? json_encode($data) : __('Invalid response from API server!', 'lw_all_in_one'),
+          ($data != 'null') ? json_encode($data) : __('Invalid response from API server!', 'lw-all-in-one'),
           'error'
         );
       } else {
@@ -169,7 +169,7 @@ class Lw_All_In_One_Admin {
         add_settings_error(
           $this->plugin_name,
           $this->plugin_name . '_settings_not_updated_not_known',
-          ($data != 'null') ? json_encode($data) : __('Invalid response from API server!', 'lw_all_in_one'),
+          ($data != 'null') ? json_encode($data) : __('Invalid response from API server!', 'lw-all-in-one'),
           'error'
         );
       }
@@ -196,14 +196,16 @@ class Lw_All_In_One_Admin {
         add_settings_error(
           $this->plugin_name,
           $this->plugin_name . '_lw_cf7_main_not_installed',
-          sprintf(__('Contact Form 7 plugin is not installed! <a href="%s" title="Contact Form 7">Install It Now!</a>', 'lw_all_in_one'), wp_nonce_url(admin_url('update.php?action=install-plugin&plugin=contact-form-7'), 'install-plugin_contact-form-7')),
+          /* translators: 1: URL to install Contact Form 7 plugin. */
+          sprintf(__('Contact Form 7 plugin is not installed! <a href="%s" title="Contact Form 7">Install It Now!</a>', 'lw-all-in-one'), wp_nonce_url(admin_url('update.php?action=install-plugin&plugin=contact-form-7'), 'install-plugin_contact-form-7')),
           'error'
         );
       } else if (!in_array('contact-form-7/wp-contact-form-7.php', apply_filters('active_plugins', get_option('active_plugins')))) {
         add_settings_error(
           $this->plugin_name,
           $this->plugin_name . '_lw_cf7_main_not_installed',
-          sprintf(__('Contact Form 7 plugin is not activated! <a href="%s" title="Contact Form 7">Activate It Now!</a>', 'lw_all_in_one'), wp_nonce_url(admin_url('plugins.php?action=activate&plugin=contact-form-7/wp-contact-form-7.php'), 'activate-plugin_contact-form-7/wp-contact-form-7.php')),
+          /* translators: 1: URL to activate Contact Form 7 plugin. */
+          sprintf(__('Contact Form 7 plugin is not activated! <a href="%s" title="Contact Form 7">Activate It Now!</a>', 'lw-all-in-one'), wp_nonce_url(admin_url('plugins.php?action=activate&plugin=contact-form-7/wp-contact-form-7.php'), 'activate-plugin_contact-form-7/wp-contact-form-7.php')),
           'error'
         );
       }
@@ -253,7 +255,11 @@ class Lw_All_In_One_Admin {
     $lw_hf_fields_insert_header = (isset($options['lw_hf_fields']['insert_header'])) ? $options['lw_hf_fields']['insert_header'] : '';
 
     if ($lw_hf_fields_insert_header !== '') {
-      echo ($this->lw_all_in_one_is_base64($lw_hf_fields_insert_header)) ? (base64_decode($lw_hf_fields_insert_header)) : $lw_hf_fields_insert_header, "\n";
+      echo
+        $this->lw_all_in_one_is_base64($lw_hf_fields_insert_header)
+        // Here is expected html/js/css code - escaped with lw_all_in_one_kses_extended() to allow safe HTML including script and style tags
+        ? lw_all_in_one_kses_extended(base64_decode($lw_hf_fields_insert_header))
+        : lw_all_in_one_kses_extended($lw_hf_fields_insert_header), "\n";
     }
   }
 
@@ -263,7 +269,7 @@ class Lw_All_In_One_Admin {
     $lw_hf_fields_insert_footer = (isset($options['lw_hf_fields']['insert_footer'])) ? $options['lw_hf_fields']['insert_footer'] : '';
 
     if ($lw_hf_fields_insert_footer !== '') {
-      echo ($this->lw_all_in_one_is_base64($lw_hf_fields_insert_footer)) ? (base64_decode($lw_hf_fields_insert_footer)) : $lw_hf_fields_insert_footer, "\n";
+      echo ($this->lw_all_in_one_is_base64($lw_hf_fields_insert_footer)) ? lw_all_in_one_kses_extended(base64_decode($lw_hf_fields_insert_footer)) : lw_all_in_one_kses_extended($lw_hf_fields_insert_footer), "\n";
     }
     echo '<style>.grecaptcha-badge{visibility: hidden !important}</style>', "\n";
   }
@@ -292,9 +298,11 @@ class Lw_All_In_One_Admin {
   public function lw_all_in_one_admin_footer_text($text) {
     $current_screen = get_current_screen();
     if ($current_screen->parent_base == 'lw_all_in_one') {
-      $lw_aio_plugin_data = get_plugin_data(LW_ALL_IN_ONE_PLUGIN_MAIN_FILE);
+	    // Prevent early translation call by setting $translate to false.
+      $lw_aio_plugin_data = get_plugin_data(LW_ALL_IN_ONE_PLUGIN_MAIN_FILE, false, /* $translate */ false);
       $plugin_name = $lw_aio_plugin_data['Name'];
-      return $plugin_name . sprintf(__(' | Version %s', 'lw_all_in_one'), LW_ALL_IN_ONE_VERSION);
+      /* translators: 1: Plugin version. */
+      return $plugin_name . sprintf(__(' | Version %s', 'lw-all-in-one'), LW_ALL_IN_ONE_VERSION);
     } else {
       return $text;
     }
@@ -305,7 +313,7 @@ class Lw_All_In_One_Admin {
       return;
     }
     if (!check_ajax_referer($this->plugin_name, 'security')) {
-      wp_send_json_error(__('Security is not valid!', 'lw_all_in_one'));
+      wp_send_json_error(__('Security is not valid!', 'lw-all-in-one'));
       die();
     }
     if (isset($_POST['action']) && $_POST['action'] === "lw_all_in_one_reset_plugin_options") {
@@ -313,7 +321,9 @@ class Lw_All_In_One_Admin {
       $charset_collate = $wpdb->get_charset_collate();
       $a_events_table = $wpdb->prefix . LW_ALL_IN_ONE_A_EVENTS_TABLE;
       $cf7_table = $wpdb->prefix . LW_ALL_IN_ONE_CF7_TABLE;
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table deletion
       $wpdb->query("DROP TABLE IF EXISTS {$a_events_table}");
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table deletion
       $wpdb->query("DROP TABLE IF EXISTS {$cf7_table}");
 
       delete_option('lw_all_in_one');
@@ -395,6 +405,7 @@ class Lw_All_In_One_Admin {
       add_option('lw_all_in_one'.'_version', LW_ALL_IN_ONE_VERSION);
 
       require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table check
       if ($wpdb->get_var("show tables like '$a_events_table'") != $a_events_table) {
         $sql1 = "CREATE TABLE $a_events_table (
               id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -404,8 +415,10 @@ class Lw_All_In_One_Admin {
               ga_label varchar(250) DEFAULT '' NULL,
               PRIMARY KEY (id)
             ) $charset_collate;";
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom table creation
         dbDelta($sql1);
       }
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table check
       if ($wpdb->get_var("show tables like '$cf7_table'") != $cf7_table) {
         $sql2 = "CREATE TABLE $cf7_table (
               id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -422,10 +435,11 @@ class Lw_All_In_One_Admin {
               sent varchar(2) DEFAULT '' NULL,
               PRIMARY KEY (id)
             ) $charset_collate;";
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom table creation
         dbDelta($sql2);
       }
 
-      wp_send_json_success(array('message' => __('Options were reset to defaults!', 'lw_all_in_one')));
+      wp_send_json_success(array('message' => __('Options were reset to defaults!', 'lw-all-in-one')));
       die();
     }
   }

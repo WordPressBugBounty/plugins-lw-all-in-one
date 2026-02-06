@@ -1,0 +1,979 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: LocalWeb All In One\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-03-03 17:13+0100\n"
+"PO-Revision-Date: 2024-03-19 12:02+0100\n"
+"Last-Translator: \n"
+"Language-Team: Spanish (Spain)\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.4.2\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Loco-Version: 2.6.7; wp-6.4.3\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:807
+msgid " (widget)"
+msgstr " (widget)"
+
+#: admin/class-lw-all-in-one-admin.php:297
+msgid " | Version %s"
+msgstr " | Versión %s"
+
+#: public/class-lw-all-in-one-public.php:152
+#: public/class-lw-all-in-one-public.php:160
+#: public/class-lw-all-in-one-public.php:381
+msgid "1 Year"
+msgstr "1 año"
+
+#: admin/partials/lw-all-in-one-admin-display.php:379
+msgid "10s"
+msgstr "10s"
+
+#: public/class-lw-all-in-one-public.php:199
+#: public/class-lw-all-in-one-public.php:207
+msgid "2 Years"
+msgstr "2 años"
+
+#: admin/partials/lw-all-in-one-admin-display.php:380
+msgid "20s"
+msgstr "20s"
+
+#: admin/partials/lw-all-in-one-admin-display.php:381
+msgid "30s"
+msgstr "30s"
+
+#: admin/partials/lw-all-in-one-admin-display.php:382
+msgid "45s"
+msgstr "45s"
+
+#: admin/partials/lw-all-in-one-admin-display.php:378
+msgid "5s"
+msgstr "5s"
+
+#: admin/partials/lw-all-in-one-admin-display.php:383
+msgid "60s"
+msgstr "64s"
+
+#: admin/partials/lw-all-in-one-admin-display.php:512
+msgid ""
+"<b>*</b><code>HTML, JS, CSS</code> code is allowed. <b>Be careful</b> what "
+"you insert here because it may break the website!"
+msgstr ""
+"<b>*</b>Se permite el código <code>HTML, JS, CSS</code>. <b>Ten cuidado</b> "
+"con lo que insertas aquí porque puede dañar el sitio web"
+
+#: admin/partials/lw-all-in-one-admin-display.php:553
+msgid "<b>Delete saved data on plugin uninstall?</b> "
+msgstr "<b>¿Eliminar los datos guardados al desinstalar el complemento?</b> "
+
+#: admin/partials/lw-all-in-one-admin-display.php:565
+msgid ""
+"<b>Enable a daily cron job to delete saved data on the database older than "
+"14 days?</b> "
+msgstr ""
+"<b>¿Habilitar una tarea cron diaria para eliminar datos guardados en la base "
+"de datos con más de 14 días de antigüedad?</b> "
+
+#: admin/partials/lw-all-in-one-admin-display.php:541
+msgid "<b>Reset Plugin Options!</b> "
+msgstr "<b>¡Restablecer opciones de complemento!</b> "
+
+#: admin/partials/lw-all-in-one-admin-display.php:333
+msgid "About Cookies Message"
+msgstr "Acerca del mensaje de cookies"
+
+#: admin/partials/lw-all-in-one-admin-display.php:519
+msgid ""
+"Above script will be inserted into the <code>&lt;head&gt;</code> section."
+msgstr ""
+"El script anterior se insertará en la sección <code>&lt;head&gt;</code>."
+
+#: admin/partials/lw-all-in-one-admin-display.php:524
+msgid ""
+"Above script will be inserted just before <code>&lt;/body&gt;</code> tag "
+"using <code>wp_footer</code> hook."
+msgstr ""
+"El script anterior se insertará justo antes de la etiqueta <code>&lt;/"
+"body&gt;</code> usando el gancho <code>wp_footer</code>."
+
+#: public/class-lw-all-in-one-public.php:391
+msgid "Accept All Cookies"
+msgstr "Aceptar todas las cookies"
+
+#: public/class-lw-all-in-one-public.php:390
+msgid "Accept Selected"
+msgstr "Aceptar Seleccionado"
+
+#: admin/partials/lw-all-in-one-admin-ga-events-display.php:116
+msgid "Action"
+msgstr "Acción"
+
+#: admin/class-lw-all-in-one-privacy-policy-pages.php:150
+#: admin/class-lw-all-in-one-wim.php:98
+#: public/class-lw-all-in-one-public.php:578
+msgid "Action is not valid!"
+msgstr "¡La acción no es válida!"
+
+#: admin/partials/lw-all-in-one-admin-display.php:113
+msgid "Activate Cookie Consent Banner?"
+msgstr "¿Activar el banner de consentimiento de cookies?"
+
+#: admin/partials/lw-all-in-one-admin-display.php:101
+msgid "Activate Google Analytics?"
+msgstr "¿Activar Google Analytics?"
+
+#: admin/partials/lw-all-in-one-admin-display.php:137
+msgid "Activate LocalWeb Contact Form 7?"
+msgstr "¿Activar el formulario de contacto 7 de LocalWeb?"
+
+#: admin/partials/lw-all-in-one-admin-display.php:89
+msgid "Activate Services"
+msgstr "Activar Servicios"
+
+#: admin/partials/lw-all-in-one-admin-display.php:125
+msgid "Activate Web Instant Messenger?"
+msgstr "¿Activar Web Instant Messenger?"
+
+#: public/class-lw-all-in-one-public.php:138
+msgid ""
+"Analytical cookies help website owners understand how visitors interact with "
+"sites by collecting and reporting information anonymously."
+msgstr ""
+"Las cookies analíticas ayudan a los propietarios de sitios web a comprender "
+"cómo los visitantes interactúan con los sitios al recopilar y reportar "
+"información de forma anónima."
+
+#: public/class-lw-all-in-one-public.php:136
+msgid "Analytics"
+msgstr "Analítica"
+
+#: admin/js/lw-all-in-one-admin.js:77 admin/js/lw-all-in-one-admin.js:86
+msgid "Are you sure you want to delete this record?"
+msgstr "¿Está seguro de que desea eliminar este registro?"
+
+#: admin/js/lw-all-in-one-admin.js:94
+msgid "Are you sure you want to reset plugin options?"
+msgstr "¿Estás seguro de que deseas restablecer las opciones del complemento?"
+
+#: admin/partials/lw-all-in-one-admin-display.php:363
+msgid "Auto show WIM"
+msgstr "¿Mostrar automáticamente WIM"
+
+#: admin/partials/lw-all-in-one-admin-display.php:374
+msgid "Auto show WIM after"
+msgstr "Mostrar automáticamente WIM después"
+
+#: admin/partials/lw-all-in-one-admin-display.php:411
+msgid "Automatic Message 0"
+msgstr "Mensaje automático 0"
+
+#: admin/partials/lw-all-in-one-admin-display.php:419
+msgid "Automatic Message 1"
+msgstr "Mensaje automático 1"
+
+#: admin/partials/lw-all-in-one-admin-display.php:257
+msgid "Banner Position"
+msgstr "Posición del banner"
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:845
+msgid "Best Selling Products"
+msgstr "Productos más vendidos"
+
+#: admin/partials/lw-all-in-one-admin-display.php:263
+msgid "Bottom"
+msgstr "Abajo"
+
+#: admin/partials/lw-all-in-one-admin-display.php:352
+msgid "Business Name"
+msgstr "Nombre del Negocio"
+
+#: public/class-lw-all-in-one-public.php:396
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: admin/partials/lw-all-in-one-admin-ga-events-display.php:115
+msgid "Category"
+msgstr "Categoría"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:50
+msgid "Choose which pages you want to create:"
+msgstr "Elija qué páginas desea crear:"
+
+#: public/class-lw-all-in-one-public.php:395
+msgid "Confirm"
+msgstr "Confirmar"
+
+#: admin/partials/lw-all-in-one-admin-display.php:456
+msgid "Contact Form 7 Addon Options"
+msgstr "Opciones adicionales del formulario de contacto 7"
+
+#: admin/class-lw-all-in-one-admin.php:206
+msgid ""
+"Contact Form 7 plugin is not activated! <a href=\"%s\" title=\"Contact Form "
+"7\">Activate It Now!</a>"
+msgstr ""
+"¡El complemento Contact Form 7 no está activado! <a href=\"%s\" "
+"title=\"Contact Form 7\">¡Actívalo ahora!</a>"
+
+#: admin/class-lw-all-in-one-admin.php:199
+msgid ""
+"Contact Form 7 plugin is not installed! <a href=\"%s\" title=\"Contact Form "
+"7\">Install It Now!</a>"
+msgstr ""
+"¡El complemento Formulario de contacto 7 no está instalado! <a href=\"%s\" "
+"title=\"Contact Form 7\">¡Instalalo además!</a>"
+
+#: admin/partials/lw-all-in-one-admin-display.php:151
+msgid "Cookie Banner"
+msgstr "Pancarta de galletas"
+
+#: public/class-lw-all-in-one-public.php:162
+msgid "Cookie consent preferences."
+msgstr "Preferencias de consentimiento de cookies."
+
+#: public/class-lw-all-in-one-public.php:394
+msgid "Cookie Info"
+msgstr "Información de cookies"
+
+#: admin/partials/lw-all-in-one-admin-display.php:269
+msgid "Cookie Page"
+msgstr "Página de cookies"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:57
+msgid "Cookie Policy page already created: "
+msgstr "Página Las cookies que utilizamos ya creada: "
+
+#: public/class-lw-all-in-one-public.php:397
+msgid "Cookie Settings"
+msgstr "Configuración de cookies"
+
+#: public/class-lw-all-in-one-public.php:399
+msgid "Cookie statement"
+msgstr "Declaración de cookies"
+
+#: admin/privacy-pages/cookie.php:40
+msgid "cookie-policy could not be created!"
+msgstr "¡No se pudo crear cookie-policy!"
+
+#: admin/privacy-pages/cookie.php:20
+msgid "cookie-policy could not be update!"
+msgstr "¡cookie-policy no se pudo actualizar!"
+
+#: admin/privacy-pages/cookie.php:45
+msgid "cookie-policy created successfully!"
+msgstr "¡cookie-policy se creó correctamente!"
+
+#: admin/privacy-pages/cookie.php:25
+msgid "cookie-policy updated successfully!"
+msgstr "¡cookie-policy se actualizó correctamente!"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:71
+msgid "Create Cookie Policy page?"
+msgstr "¿Crear página Las cookies que utilizamos?"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:115
+msgid "Create Information Treatment page?"
+msgstr "¿Crear página Informacion sobre el tratamiento de datos"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:126
+msgid "Create Pages"
+msgstr "Crear páginas"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:93
+msgid "Create Privacy Policy page?"
+msgstr "¿Crear página Información Sobre El Tratamiento De Datos Personales"
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:704
+msgid "Cross-Sell Products"
+msgstr "Productos de venta cruzada"
+
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:111
+#: admin/partials/lw-all-in-one-admin-ga-events-display.php:118
+msgid "Date"
+msgstr "Fecha"
+
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:183
+#: admin/partials/lw-all-in-one-admin-ga-events-display.php:185
+msgid "Delete"
+msgstr "Borrar"
+
+#: public/partials/lw-all-in-one-public-ck-consent.php:75
+msgid "Domain"
+msgstr "Dominio"
+
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:114
+msgid "Email"
+msgstr "Email"
+
+#: admin/partials/lw-all-in-one-admin-display.php:405
+msgid "EN"
+msgstr "EN"
+
+#: public/class-lw-all-in-one-public.php:573
+msgid "Event Saved!"
+msgstr "¡Evento guardado!"
+
+#: public/class-lw-all-in-one-public.php:575
+msgid "Event was not Saved!"
+msgstr "¡El evento no se guardó!"
+
+#: includes/class-lw-all-in-one.php:292
+msgid "Every 5 Minutes"
+msgstr "Cada 5 minutos"
+
+#: public/partials/lw-all-in-one-public-ck-consent.php:77
+msgid "Expiry"
+msgstr "Expiración"
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:869
+msgid "Featured Products"
+msgstr "Productos Destacados"
+
+#: admin/partials/lw-all-in-one-admin-display.php:327
+msgid "GDPR Message"
+msgstr "Mensaje RGPD"
+
+#: admin/partials/lw-all-in-one-admin-display.php:534
+msgid "General Options"
+msgstr "Opciones generales"
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:909
+msgid "General Product List"
+msgstr "Lista general de productos"
+
+#: admin/partials/lw-all-in-one-admin-display.php:490
+msgid "Go Start"
+msgstr "Go Start"
+
+#: admin/partials/lw-all-in-one-admin-display.php:492
+msgid "Go Web"
+msgstr "Go Web"
+
+#: admin/partials/lw-all-in-one-admin-display.php:149
+msgid "Google Analytics"
+msgstr "Google Analytics"
+
+#: admin/partials/lw-all-in-one-admin-display.php:169
+msgid "Google Analytics Options"
+msgstr "Opciones de Google Analytics"
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:1068
+msgid "Grouped Product Detail Page"
+msgstr "Página de detalles de productos agrupados"
+
+#: admin/partials/lw-all-in-one-admin-display.php:157
+msgid "Header/Footer Scripts"
+msgstr "Script Header/Footer"
+
+#: admin/partials/lw-all-in-one-admin-display.php:321
+msgid "Heading Message"
+msgstr "Mensaje de encabezado"
+
+#. Author URI of the plugin
+#: C:\xampp\htdocs\wordpress\wp-content\plugins\lw-all-in-one\lw-all-in-one.php
+msgid "https://localweb.it/"
+msgstr "https://localweb.it/"
+
+#. Plugin URI of the plugin
+#: C:\xampp\htdocs\wordpress\wp-content\plugins\lw-all-in-one\lw-all-in-one.php
+msgid "https://wordpress.org/plugins/lw-all-in-one/"
+msgstr "https://wordpress.org/plugins/lw-all-in-one/"
+
+#: admin/partials/lw-all-in-one-admin-display.php:553
+msgid ""
+"If selected, saved Google Analytics events, saved Contact Form 7 submissions "
+"and Plugin options will be permanently deleted! "
+msgstr ""
+"Si se selecciona, los eventos guardados de Google Analytics, los envíos "
+"guardados del Formulario de contacto 7 y las opciones de complementos se "
+"eliminarán permanentemente"
+
+#: public/class-lw-all-in-one-public.php:400
+msgid "Information about cookies"
+msgstr "Información sobre las cookies"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:101
+msgid "Information Treatment page already created: "
+msgstr "Página Informacion sobre el tratamiento de datos ya creada: "
+
+#: admin/privacy-pages/privacy.php:39
+msgid "informativa-sul-trattamento-dei-dati-personali could not be created!"
+msgstr ""
+"¡No se pudo crear informacion-sobre-el-tratamiento-de-datos-personales!"
+
+#: admin/privacy-pages/privacy.php:19
+msgid "informativa-sul-trattamento-dei-dati-personali could not be update!"
+msgstr ""
+"¡El informacion-sobre-el-tratamiento-de-datos-personales no se pudo "
+"actualizar!"
+
+#: admin/privacy-pages/privacy.php:44
+msgid "informativa-sul-trattamento-dei-dati-personali created successfully!"
+msgstr "informacion-sobre-el-tratamiento-de-datos-personales creado con éxito!"
+
+#: admin/privacy-pages/privacy.php:24
+msgid "informativa-sul-trattamento-dei-dati-personali updated successfully!"
+msgstr ""
+"informacion-sobre-el-tratamiento-de-datos-personales ¡actualizado "
+"exitosamente!"
+
+#: admin/privacy-pages/contact.php:38
+msgid "informativa-trattamento-dati could not be created!"
+msgstr "¡No se pudo crear informacion-sobre-el-tratamiento-de-datos!"
+
+#: admin/privacy-pages/contact.php:18
+msgid "informativa-trattamento-dati could not be update!"
+msgstr "informacion-sobre-el-tratamiento-de-datos no se pudo actualizar!"
+
+#: admin/privacy-pages/contact.php:43
+msgid "informativa-trattamento-dati created successfully!"
+msgstr "informacion-sobre-el-tratamiento-de-datos creado exitosamente!"
+
+#: admin/privacy-pages/contact.php:23
+msgid "informativa-trattamento-dati updated successfully!"
+msgstr "informacion-sobre-el-tratamiento-de-datos actualizado con éxito!"
+
+#: admin/partials/lw-all-in-one-admin-display.php:358
+msgid "Insert here your business name which will appear on the chat header"
+msgstr ""
+"Inserta aquí el nombre de tu empresa que aparecerá en el encabezado del chat"
+
+#: admin/class-lw-all-in-one-admin.php:164
+#: admin/class-lw-all-in-one-admin.php:172
+msgid "Invalid response from API server!"
+msgstr "¡Respuesta no válida del servidor API!"
+
+#: admin/partials/lw-all-in-one-admin-display.php:404
+msgid "IT"
+msgstr "IT"
+
+#: admin/partials/lw-all-in-one-admin-ga-events-display.php:117
+msgid "Label"
+msgstr "Etiqueta"
+
+#: admin/partials/lw-all-in-one-admin-display.php:400
+msgid "Language"
+msgstr "Idioma"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:38
+msgid ""
+"Link \"Informativa Trattamento Dati\" in all contact forms of the website."
+msgstr ""
+"Enlace \"Informacion sobre el tratamiento de datos\" en todos los "
+"formularios de contacto del sitio web."
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:35
+msgid ""
+"Link at FOOTER section pages \"Informativa sul trattamento dei dati "
+"personali\" and \"Cookie Policy\"."
+msgstr ""
+"Enlace a las páginas de la sección FOOTER \"Información Sobre El Tratamiento "
+"De Datos Personales\" y \"Las Cookies Que Utilizamos\"."
+
+#. Author of the plugin
+#: C:\xampp\htdocs\wordpress\wp-content\plugins\lw-all-in-one\lw-all-in-one.php
+msgid "Local Web S.R.L"
+msgstr "Local Web S.R.L."
+
+#. Plugin Name of the plugin
+#: C:\xampp\htdocs\wordpress\wp-content\plugins\lw-all-in-one\lw-all-in-one.php
+msgid "LocalWeb All In One"
+msgstr "LocalWeb All In One"
+
+#: admin/class-lw-all-in-one-admin.php:79
+msgid "LocalWeb All In One Options"
+msgstr "Opciones AIO LocalWeb"
+
+#. Description of the plugin
+#: C:\xampp\htdocs\wordpress\wp-content\plugins\lw-all-in-one\lw-all-in-one.php
+msgid ""
+"LocalWeb All In One should be installed only on websites created by Local "
+"Web S.R.L, because it extends certain functionalities of the website which "
+"may send certain data to LocalWeb's servers. This is to make possible "
+"showing data on LocalWeb App."
+msgstr ""
+"LocalWeb All In One debe instalarse únicamente en sitios web creados por "
+"Local Web S.R.L, porque amplía ciertas funcionalidades del sitio web que "
+"pueden enviar ciertos datos a los servidores de LocalWeb. Esto es para hacer "
+"posible mostrar datos en la aplicación LocalWeb."
+
+#: admin/partials/lw-all-in-one-admin-display.php:155
+msgid "LocalWeb Contact Form 7"
+msgstr "LocalWeb Contact Form 7"
+
+#: admin/class-lw-all-in-one-privacy-policy-pages.php:51
+msgid "LocalWeb Privacy&Policy Pages Options"
+msgstr "Opciones de páginas de política y privacidad de Local Web Iberia"
+
+#: admin/class-lw-all-in-one-admin.php:79
+msgid "LW AIO Options"
+msgstr "Opciones LW AIO"
+
+#: public/class-lw-all-in-one-public.php:142
+msgid "Marketing"
+msgstr "Marketing"
+
+#: public/class-lw-all-in-one-public.php:144
+msgid ""
+"Marketing cookies are used to track visitors to websites. The intention is "
+"to display ads that are relevant and engaging to the individual user and "
+"therefore more valuable to publishers and third-party advertisers."
+msgstr ""
+"Las cookies de marketing se utilizan para rastrear a los visitantes de los "
+"sitios web. La intención es mostrar anuncios que sean relevantes y "
+"atractivos para el usuario individual y, por lo tanto, más valiosos para los "
+"editores y anunciantes externos."
+
+#: public/class-lw-all-in-one-public.php:548
+msgid "Missing business name!"
+msgstr "¡Falta el nombre del negocio!"
+
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:112
+#: public/partials/lw-all-in-one-public-ck-consent.php:74
+msgid "Name"
+msgstr "Nombre"
+
+#: public/class-lw-all-in-one-public.php:124
+msgid "Necessary"
+msgstr "Necesario"
+
+#: public/class-lw-all-in-one-public.php:126
+msgid ""
+"Necessary cookies help make a website usable by enabling basic functions "
+"such as page navigation and access to protected areas of the site. The "
+"website cannot function properly without these cookies."
+msgstr ""
+"Las cookies necesarias ayudan a que un sitio web sea utilizable al permitir "
+"funciones básicas como la navegación por la página y el acceso a áreas "
+"protegidas del sitio. El sitio web no puede funcionar correctamente sin "
+"estas cookies."
+
+#: admin/partials/lw-all-in-one-admin-display.php:368
+#: admin/partials/lw-all-in-one-admin-display.php:394
+msgid "NO"
+msgstr "NO"
+
+#: admin/partials/lw-all-in-one-admin-display.php:284
+msgid "No pages found with \"cookie\" in the title. Go create one."
+msgstr "No se encontraron páginas con \"cookie\" en el título. Ve a crear uno."
+
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:217
+#: admin/partials/lw-all-in-one-admin-ga-events-display.php:216
+msgid "No records found in the database."
+msgstr "No se encontraron registros en la base de datos."
+
+#: admin/class-lw-all-in-one-wim.php:94
+msgid "Not a valid response!"
+msgstr "¡No es una respuesta válida!"
+
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:191
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:199
+#: admin/partials/lw-all-in-one-admin-ga-events-display.php:193
+#: admin/partials/lw-all-in-one-admin-ga-events-display.php:198
+msgid "Not valid request!"
+msgstr "¡Solicitud no válida!"
+
+#: admin/class-lw-all-in-one-ga-events.php:111
+msgid "Number of records per page"
+msgstr "Número de registros por página"
+
+#: admin/class-lw-all-in-one-cf7.php:178
+msgid "Number of records per page:"
+msgstr "Número de registros por página:"
+
+#: admin/partials/lw-all-in-one-admin-display.php:467
+msgid "Optimize Contact Form 7 scripts/styles delivery?"
+msgstr "¿Optimizar la entrega de scripts/estilos del Formulario de contacto 7?"
+
+#: admin/class-lw-all-in-one-admin.php:428
+msgid "Options were reset to defaults!"
+msgstr "¡Las opciones se restablecieron a los valores predeterminados!"
+
+#: admin/partials/lw-all-in-one-admin-display.php:498
+msgid "Packet Id"
+msgstr "ID del paquete"
+
+#: admin/partials/lw-all-in-one-admin-display.php:485
+msgid "Packet Type"
+msgstr "Tipo de paquete"
+
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:115
+msgid "Phone"
+msgstr "Teléfono"
+
+#: admin/partials/lw-all-in-one-admin-display.php:159
+msgid "Plugin Options"
+msgstr "Opciones de complemento"
+
+#: public/class-lw-all-in-one-public.php:132
+msgid ""
+"Preference cookies allow a website to remember information that changes the "
+"way the website behaves or appears, such as your preferred language or the "
+"region you are in."
+msgstr ""
+"Las cookies de preferencias permiten que un sitio web recuerde información "
+"que cambia la forma en que se comporta o aparece el sitio web, como su "
+"idioma preferido o la región en la que se encuentra."
+
+#: public/class-lw-all-in-one-public.php:130
+msgid "Preferences"
+msgstr "Preferencias"
+
+#: admin/partials/lw-all-in-one-admin-display.php:297
+msgid "Primary Banner Color"
+msgstr "Color principal del banner"
+
+#: admin/partials/lw-all-in-one-admin-display.php:284
+msgid "Privacy Pages"
+msgstr "Páginas de privacidad"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:79
+msgid "Privacy Policy page already created: "
+msgstr ""
+"Página Información Sobre El Tratamiento De Datos Personales ya creada: "
+
+#: admin/class-lw-all-in-one-privacy-policy-pages.php:51
+msgid "Privacy&Policy Pages"
+msgstr "Páginas de política de privacidad"
+
+#: public/partials/lw-all-in-one-public-ck-consent.php:76
+msgid "Purpose"
+msgstr "Objetivo"
+
+#: public/class-lw-all-in-one-public.php:392
+msgid "Read more"
+msgstr "Leer más"
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:821
+msgid "Recent Products"
+msgstr "Productos recientes"
+
+#: public/class-lw-all-in-one-public.php:311
+#: public/class-lw-all-in-one-public.php:319
+msgid "Record the user's current browsing URL."
+msgstr "Registre la URL de navegación actual del usuario."
+
+#: public/class-lw-all-in-one-public.php:327
+msgid "Record the user's referral URL."
+msgstr "Registre la URL de referencia del usuario."
+
+#: public/class-lw-all-in-one-public.php:393
+msgid "Refuse"
+msgstr "Rechazar"
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:689
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:881
+msgid "Related Products"
+msgstr "Productos relacionados"
+
+#: admin/partials/lw-all-in-one-admin-display.php:539
+msgid "Reset"
+msgstr "Reiniciar"
+
+#: admin/partials/lw-all-in-one-admin-display.php:539
+msgid "Reset Plugin Options"
+msgstr "Restablecer opciones de complemento"
+
+#: admin/partials/lw-all-in-one-admin-display.php:541
+msgid "Revert to default plugin options."
+msgstr "Vuelva a las opciones de complemento predeterminadas."
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:833
+msgid "Sale Products"
+msgstr "Productos en venta"
+
+#: admin/partials/lw-all-in-one-admin-display.php:480
+msgid "Save Contact Form 7 submissions locally on the database?"
+msgstr ""
+"¿Guardar los envíos del Formulario de contacto 7 localmente en la base de "
+"datos?"
+
+#: admin/partials/lw-all-in-one-admin-display.php:188
+msgid "Save Google Analytics events locally on the database?"
+msgstr "¿Guardar eventos de Google Analytics localmente en la base de datos?"
+
+#: admin/partials/lw-all-in-one-admin-display.php:588
+msgid "Save Options"
+msgstr "Guardar Opciones"
+
+#: admin/class-lw-all-in-one-cf7.php:52
+msgid "Saved CF7"
+msgstr "CF7 Guardado"
+
+#: admin/partials/lw-all-in-one-admin-display.php:565
+msgid ""
+"Saved Contact Form 7 submissions older than 14 days will be permanently "
+"deleted!"
+msgstr ""
+"¡Los envíos del Formulario de contacto 7 guardados con más de 14 días de "
+"antigüedad se eliminarán permanentemente!"
+
+#: admin/class-lw-all-in-one-cf7.php:52
+msgid "Saved Contact Form Submissions"
+msgstr "Envíos de formularios de contacto guardados"
+
+#: admin/class-lw-all-in-one-ga-events.php:51
+msgid "Saved GA Events"
+msgstr "Eventos GA guardados"
+
+#: admin/class-lw-all-in-one-ga-events.php:51
+msgid "Saved Google Analytics Events"
+msgstr "Eventos guardados de Google Analytics"
+
+#: admin/partials/lw-all-in-one-admin-display.php:522
+msgid "Scripts in footer:"
+msgstr "Guiones en pie de página:"
+
+#: admin/partials/lw-all-in-one-admin-display.php:517
+msgid "Scripts in header:"
+msgstr "Guiones en el encabezado:"
+
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:50
+#: admin/partials/lw-all-in-one-admin-ga-events-display.php:50
+msgid "Search Records"
+msgstr "Buscar Registros"
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:905
+msgid "Search Results"
+msgstr "Resultados de la búsqueda"
+
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:42
+#: admin/partials/lw-all-in-one-admin-ga-events-display.php:42
+msgid "Search results for &#8220;%s&#8221;"
+msgstr "Resultados de la búsqueda para &#8220;%s&#8221;"
+
+#: admin/partials/lw-all-in-one-admin-display.php:305
+msgid "Secondary Banner Color"
+msgstr "Color de banner secundario"
+
+#: admin/class-lw-all-in-one-admin.php:308
+#: admin/class-lw-all-in-one-privacy-policy-pages.php:68
+#: admin/class-lw-all-in-one-wim.php:57
+#: public/class-lw-all-in-one-public.php:559
+msgid "Security is not valid!"
+msgstr "¡La seguridad no es válida!"
+
+#: admin/class-lw-all-in-one-admin.php:89
+msgid "Settings"
+msgstr "Ajustes"
+
+#: admin/partials/lw-all-in-one-admin-display.php:389
+msgid "Show On Mobile"
+msgstr "Mostrar en el móvil"
+
+#: admin/class-lw-all-in-one-admin.php:154 admin/class-lw-all-in-one-wim.php:77
+msgid "Something went wrong!"
+msgstr "¡Algo salió mal!"
+
+#: admin/partials/lw-all-in-one-admin-display.php:491
+msgid "Start Standard"
+msgstr "Start Standard"
+
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:110
+msgid "Subject"
+msgstr "Sujeto"
+
+#: admin/partials/lw-all-in-one-admin-cf7-display.php:113
+msgid "Surname"
+msgstr "Apellido"
+
+#: admin/class-lw-all-in-one-wim.php:87
+msgid "There was an unknown error!"
+msgstr "¡Hubo un error desconocido!"
+
+#: public/class-lw-all-in-one-public.php:201
+msgid ""
+"This cookie is installed by Google Analytics. The cookie is used to "
+"calculate visitor, session, campaign data and keep track of site usage for "
+"the site's analytics report. The cookies store information anonymously and "
+"assign a randomly generated number to identify unique visitors."
+msgstr ""
+"Esta cookie es instalada por Google Analytics. La cookie se utiliza para "
+"calcular los datos de visitantes, sesiones y campañas y realizar un "
+"seguimiento del uso del sitio para el informe analítico del sitio. Las "
+"cookies almacenan información de forma anónima y asignan un número generado "
+"aleatoriamente para identificar visitantes únicos."
+
+#: public/class-lw-all-in-one-public.php:173
+msgid ""
+"This cookie is set by reCAPTCHA. The cookie is used to between humans and "
+"bots and store the user's consent for cookies."
+msgstr ""
+"Esta cookie la establece reCAPTCHA. La cookie se utiliza entre humanos y "
+"bots y almacena el consentimiento del usuario para las cookies."
+
+#: public/class-lw-all-in-one-public.php:181
+#: public/class-lw-all-in-one-public.php:189
+msgid "This cookie is used to distinguish between humans and bots."
+msgstr "Esta cookie se utiliza para distinguir entre humanos y bots."
+
+#: admin/partials/lw-all-in-one-admin-display.php:322
+msgid "This site uses Cookies!"
+msgstr "¡Este sitio utiliza cookies!"
+
+#: admin/partials/lw-all-in-one-admin-display.php:262
+msgid "Top"
+msgstr "Arriba"
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:857
+msgid "Top Rated Products"
+msgstr "Productos mejor valorados"
+
+#: admin/partials/lw-all-in-one-admin-display.php:224
+msgid "Track Contact Form submission"
+msgstr "Seguimiento del envío del formulario de contacto"
+
+#: admin/partials/lw-all-in-one-admin-display.php:200
+msgid "Track Email link clicks"
+msgstr "Seguimiento de clics en enlaces de correo electrónico"
+
+#: admin/partials/lw-all-in-one-admin-display.php:212
+msgid "Track Telephone link clicks"
+msgstr "Seguimiento de clics en enlaces telefónicos"
+
+#: admin/partials/lw-all-in-one-admin-display.php:236
+msgid "Track WooCommerce data"
+msgstr "Seguimiento de datos de WooCommerce"
+
+#: admin/class-lw-all-in-one-admin.php:108
+msgid "Tracking ID is NOT valid!"
+msgstr "¡El ID de seguimiento NO es válido!"
+
+#: public/partials/lw-all-in-one-public-ck-consent.php:78
+msgid "Type"
+msgstr "Tipo"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:124
+msgid "Update Pages"
+msgstr "Actualizar páginas"
+
+#: public/partials/lw-all-in-one-public-woocommerce-gtm.php:719
+msgid "Upsell Products"
+msgstr "Vender productos"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:32
+msgid ""
+"Use this section only if this website's domain is registered by <b>LocalWeb "
+"Srl</b>."
+msgstr ""
+"Utilice esta sección sólo si el dominio de este sitio web está registrado "
+"por <b>Local Web Iberia Sl</b>."
+
+#: public/class-lw-all-in-one-public.php:209
+msgid ""
+"Used by Google Analytics to collect data on the number of times a user has "
+"visited the website as well as dates for the first and most recent visit."
+msgstr ""
+"Utilizado por Google Analytics para recopilar datos sobre el número de veces "
+"que un usuario ha visitado el sitio web, así como las fechas de la primera y "
+"la más reciente visita."
+
+#: public/class-lw-all-in-one-public.php:263
+#: public/class-lw-all-in-one-public.php:271
+#: public/class-lw-all-in-one-public.php:279
+#: public/class-lw-all-in-one-public.php:287
+#: public/class-lw-all-in-one-public.php:295
+#: public/class-lw-all-in-one-public.php:303
+msgid "Used by WIM for chat operation."
+msgstr "Utilizado por WIM para la operación de chat."
+
+#: public/class-lw-all-in-one-public.php:223
+#: public/class-lw-all-in-one-public.php:231
+#: public/class-lw-all-in-one-public.php:239
+#: public/class-lw-all-in-one-public.php:247
+#: public/class-lw-all-in-one-public.php:255
+msgid "Used by WIM to determine the user's geographic positioning."
+msgstr ""
+"Utilizado por WIM para determinar el posicionamiento geográfico del usuario."
+
+#: public/class-lw-all-in-one-public.php:154
+msgid "Used to dettermine if user has taken action on the consent banner."
+msgstr ""
+"Se utiliza para determinar si el usuario ha realizado alguna acción en el "
+"banner de consentimiento."
+
+#: admin/partials/lw-all-in-one-admin-display.php:447
+msgid "Verify Activation"
+msgstr "Verificar activación"
+
+#: admin/partials/lw-all-in-one-admin-privacy-policy-display.php:30
+msgid "WARNING!"
+msgstr "¡ADVERTENCIA!"
+
+#: public/class-lw-all-in-one-public.php:398
+msgid "We do not use cookies of this type."
+msgstr "No utilizamos cookies de este tipo."
+
+#: admin/partials/lw-all-in-one-admin-display.php:153
+msgid "Web Instant Messenger"
+msgstr "Web Instant Messenger"
+
+#: admin/class-lw-all-in-one-wim.php:84
+msgid "Web Instant Messenger authorized!"
+msgstr "Web Instant Messenger autorizado!"
+
+#: admin/partials/lw-all-in-one-admin-display.php:347
+msgid "Web Instant Messenger Options"
+msgstr "Opciones de Web Instant Messenger"
+
+#: admin/class-lw-all-in-one-wim.php:81
+msgid "WIM authorized but token returned was empty!"
+msgstr "¡WIM autorizado pero el token devuelto estaba vacío!"
+
+#: public/class-lw-all-in-one-public.php:552
+msgid "WIM installed!"
+msgstr "¡WIM instalado!"
+
+#: public/class-lw-all-in-one-public.php:540
+msgid "WIM not activated!"
+msgstr "WIM no activado!"
+
+#: public/class-lw-all-in-one-public.php:544
+msgid "WIM not verified!"
+msgstr "WIM no verificado!"
+
+#: admin/partials/lw-all-in-one-admin-display.php:367
+#: admin/partials/lw-all-in-one-admin-display.php:393
+msgid "YES"
+msgstr "SÍ"
+
+#: admin/class-lw-all-in-one-cf7.php:158
+msgid ""
+"You have activated Contact Form 7 Addon but Packet Type and/or Packet Id "
+"seems to be missing. <a href=\"%s\" title=\"Fix it Now\">Fix it Now.</a>"
+msgstr ""
+"Ha activado el complemento Contact Form 7 pero parece que falta el tipo de "
+"paquete y/o el ID del paquete. <a href=\"%s\" title=\"Arréglalo "
+"ahora\">Arréglalo ahora.</a>"
+
+#: admin/class-lw-all-in-one-ga-events.php:98
+msgid ""
+"You have Woocommerce active. Install <strong>WooCommerce Google Analytics "
+"Integration</strong> to better track your store events. <a href=\"%s\" "
+"title=\"WooCommerce Google Analytics Integration\">Activate Now!</a>"
+msgstr ""
+"Tienes Woocommerce activo. Instale la <strong>integración de Google "
+"Analytics de WooCommerce</strong> para realizar un mejor seguimiento de los "
+"eventos de su tienda. <a href=\"%s\" title=\"Integración de WooCommerce "
+"Google Analytics\">¡Active ahora!</a>"
+
+#: admin/class-lw-all-in-one-ga-events.php:96
+msgid ""
+"You have Woocommerce active. Install <strong>WooCommerce Google Analytics "
+"Integration</strong> to better track your store events. <a href=\"%s\" "
+"title=\"WooCommerce Google Analytics Integration\">Install Now!</a>"
+msgstr ""
+"Tienes Woocommerce activo. Instale la <strong>integración de Google "
+"Analytics de WooCommerce</strong> para realizar un mejor seguimiento de los "
+"eventos de su tienda. <a href=\"%s\" title=\"Integración de WooCommerce "
+"Google Analytics\">¡Instalar ahora!</a>"

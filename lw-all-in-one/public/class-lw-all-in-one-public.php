@@ -20,6 +20,24 @@
 class Lw_All_In_One_Public {
 
   /**
+   * Assegna SSO Public Key (PEM)
+   * @access   private
+   */
+  private const ASSEGNA_SSO_PUBLIC_KEY_PEM = <<<'PEM'
+-----BEGIN PUBLIC KEY-----
+MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAx2wQAYAjmnZTqkf0biPw
+L+DYOhmsxvlnF9sKmKdo7pAHZtl3G/m8UoufXHuiYBnnnlWHdDSV+Oq+hkeT3eAq
+GXeoRfXf3y9xT5n5XN+TIl/ihnk7X8kifMNGx0FxGBdrsxXgxPP924yqw5lKlGYV
+ILoNIEV7rS+ldyoJoc8goNY4gFSEr718OvaH0naoJsGefUBBIqPsQMT8z71IVypv
+Vdjz4rXl38zv/xIinMQpVsSfPZam+fRN6kbmRXPmUtYEMA1/6JpOJfcHBHGVKkZO
+6DqRoxx3kB3b6vVLlTTDdeR8U3pO9vnw3K35e4iC5gBgbl841UZV7WNEe5DlIAEk
+b2q+0Kf2mGYXL7ipFuI5iaz06e7vHvKO9XZqk61mupoGojZ7RLY5wEMjECxDMmwW
+7VJNDWYZyPeX/kWwx6pqi7KA2cIG+ygd2WrNxQ9VRNeSPOfv9PBYgFPplwAydvIA
+zfwrKtI45QvHjCyBU5Qy5E0Fvbr/abnl2/2DtG4SY62PAgMBAAE=
+-----END PUBLIC KEY-----
+PEM;
+
+  /**
    * The ID of this plugin.
    *
    * @access   private
@@ -63,6 +81,156 @@ class Lw_All_In_One_Public {
   }
 
   /**
+   * One-time SSO login endpoint used by Assegna.
+   *
+   * URL format: /?assegna_sso=1&token=...
+   */
+  public function lw_all_in_one_handle_assegna_sso() {
+    // Lightweight probe endpoint so Assegna can verify the plugin is active before minting an SSO URL.
+    // GET /?assegna_sso_probe=1
+    if (isset($_GET['assegna_sso_probe'])) {
+      if (function_exists('nocache_headers')) {
+        nocache_headers();
+      }
+
+      wp_send_json_success([
+        'active' => true,
+        'plugin' => 'lw-all-in-one',
+        'sso' => 'assegna',
+        'version' => (string) $this->version,
+      ]);
+    }
+
+    if (!isset($_GET['assegna_sso'])) {
+      return;
+    }
+
+    $token = isset($_GET['token']) ? sanitize_text_field(wp_unslash($_GET['token'])) : '';
+    if ($token === '') {
+      wp_die(__('SSO token is missing.', 'lw-all-in-one'));
+    }
+
+    if (!function_exists('openssl_verify') || !function_exists('openssl_pkey_get_public')) {
+      wp_die(__('SSO not available. OpenSSL PHP extension is required.', 'lw-all-in-one'));
+    }
+
+    $base64UrlDecode = function ($data) {
+      if (!is_string($data) || $data === '') {
+        return null;
+      }
+      $data = strtr($data, '-_', '+/');
+      $pad = strlen($data) % 4;
+      if ($pad) {
+        $data .= str_repeat('=', 4 - $pad);
+      }
+      $decoded = base64_decode($data, true);
+      return $decoded === false ? null : $decoded;
+    };
+
+    // Public key is embedded in the plugin. Allow override via constant if needed.
+    $publicKey = self::ASSEGNA_SSO_PUBLIC_KEY_PEM;
+    if (defined('LW_ALL_IN_ONE_SSO_PUBLIC_KEY') && (string) LW_ALL_IN_ONE_SSO_PUBLIC_KEY !== '') {
+      $publicKey = (string) LW_ALL_IN_ONE_SSO_PUBLIC_KEY;
+    }
+
+    if (!is_string($publicKey) || trim($publicKey) === '') {
+      wp_die(__('SSO not configured. Missing public key in plugin.', 'lw-all-in-one'));
+    }
+
+    $parts = explode('.', $token, 2);
+    if (count($parts) !== 2) {
+      wp_die(__('Invalid SSO token format.', 'lw-all-in-one'));
+    }
+
+    $payloadJson = $base64UrlDecode($parts[0]);
+    $signature = $base64UrlDecode($parts[1]);
+    if ($payloadJson === null || $signature === null) {
+      wp_die(__('Invalid SSO token encoding.', 'lw-all-in-one'));
+    }
+
+    $pub = openssl_pkey_get_public($publicKey);
+    if (!$pub) {
+      wp_die(__('SSO public key is invalid.', 'lw-all-in-one'));
+    }
+
+    $ok = openssl_verify($payloadJson, $signature, $pub, OPENSSL_ALGO_SHA256);
+    if ($ok !== 1) {
+      wp_die(__('SSO token signature verification failed.', 'lw-all-in-one'));
+    }
+
+    $payload = json_decode($payloadJson, true);
+    if (!is_array($payload)) {
+      wp_die(__('Invalid SSO payload.', 'lw-all-in-one'));
+    }
+
+    $u = isset($payload['u']) ? sanitize_text_field((string) $payload['u']) : '';
+    $ts = isset($payload['ts']) ? (int) $payload['ts'] : 0;
+    $nonce = isset($payload['nonce']) ? sanitize_text_field((string) $payload['nonce']) : '';
+    $redirect = isset($payload['redirect']) ? (string) $payload['redirect'] : '/wp-admin/';
+
+    if ($u === '' || $ts <= 0 || $nonce === '') {
+      wp_die(__('Missing SSO payload fields.', 'lw-all-in-one'));
+    }
+
+    // TTL: 90 seconds
+    if (abs(time() - $ts) > 90) {
+      wp_die(__('SSO token has expired.', 'lw-all-in-one'));
+    }
+
+    // Domain binding (payload domain must match current site)
+    $siteHost = parse_url(home_url(), PHP_URL_HOST);
+    $siteHost = is_string($siteHost) ? strtolower($siteHost) : '';
+    $siteHost = preg_replace('/:\\d+$/', '', $siteHost);
+    $siteHost = preg_replace('/^www\\./i', '', $siteHost);
+    $payloadDomain = isset($payload['domain']) ? strtolower((string) $payload['domain']) : '';
+    $payloadDomain = preg_replace('/^www\\./i', '', $payloadDomain);
+    if ($payloadDomain !== '' && $payloadDomain !== $siteHost) {
+      wp_die(__('SSO token domain mismatch.', 'lw-all-in-one'));
+    }
+
+    // One-time use nonce
+    $nonceKey = 'lwaio_sso_' . md5($nonce);
+    if (get_transient($nonceKey)) {
+      wp_die(__('SSO token nonce has already been used.', 'lw-all-in-one'));
+    }
+    set_transient($nonceKey, 1, 2 * MINUTE_IN_SECONDS);
+
+    $user = get_user_by('login', $u);
+    if (!$user) {
+      // fallback to first administrator (Assegna might send a user that doesn't exist on the target WP)
+      $admins = get_users([
+        'role' => 'administrator',
+        'number' => 1,
+        'orderby' => 'ID',
+        'order' => 'ASC',
+        'fields' => 'all',
+      ]);
+      $user = !empty($admins) ? $admins[0] : null;
+    }
+
+    if (!$user) {
+      wp_die(__('SSO user not found.', 'lw-all-in-one'));
+    }
+
+    if (!in_array('administrator', (array) $user->roles, true)) {
+      wp_die(__('SSO user is not an administrator.', 'lw-all-in-one'));
+    }
+
+    wp_set_current_user($user->ID);
+    wp_set_auth_cookie($user->ID, true);
+    do_action('wp_login', $user->user_login, $user);
+
+    // Redirect to wp-admin by default, or to a safe local path.
+    $target = $redirect;
+    if (!is_string($target) || $target === '' || $target[0] !== '/') {
+      $target = '/wp-admin/';
+    }
+
+    wp_safe_redirect($target);
+    exit;
+  }
+
+  /**
    * Register the stylesheets for the public-facing side of the site.
    *
    */
@@ -102,7 +270,6 @@ class Lw_All_In_One_Public {
     }
 
     if ($ck_activate === 'on') {
-      wp_register_script($this->plugin_name . '-bts', plugin_dir_url(__FILE__) . 'js/bootstrap.min.js', array('jquery'), $this->version, true);
       wp_register_script($this->plugin_name . '-consent', plugin_dir_url(__FILE__) . 'js/lw-all-in-one-consent' . $min . '.js', array('jquery'), $this->version, true);
     }
   }
@@ -121,27 +288,27 @@ class Lw_All_In_One_Public {
     $categories_data = [
       [
         'id_lwaio_category' => 1,
-        'lwaio_category_name' => __('Necessary', 'lw_all_in_one'),
+        'lwaio_category_name' => __('Necessary', 'lw-all-in-one'),
         'lwaio_category_slug' => 'necessary',
-        'lwaio_category_description' => __('Necessary cookies help make a website usable by enabling basic functions such as page navigation and access to protected areas of the site. The website cannot function properly without these cookies.', 'lw_all_in_one'),
+        'lwaio_category_description' => __('Necessary cookies help make a website usable by enabling basic functions such as page navigation and access to protected areas of the site. The website cannot function properly without these cookies.', 'lw-all-in-one'),
       ],
       [
         'id_lwaio_category' => 2,
-        'lwaio_category_name' => __('Preferences', 'lw_all_in_one'),
+        'lwaio_category_name' => __('Preferences', 'lw-all-in-one'),
         'lwaio_category_slug' => 'preferences',
-        'lwaio_category_description' => __('Preference cookies allow a website to remember information that changes the way the website behaves or appears, such as your preferred language or the region you are in.', 'lw_all_in_one'),
+        'lwaio_category_description' => __('Preference cookies allow a website to remember information that changes the way the website behaves or appears, such as your preferred language or the region you are in.', 'lw-all-in-one'),
       ],
       [
         'id_lwaio_category' => 3,
-        'lwaio_category_name' => __('Analytics', 'lw_all_in_one'),
+        'lwaio_category_name' => __('Analytics', 'lw-all-in-one'),
         'lwaio_category_slug' => 'analytics',
-        'lwaio_category_description' => __('Analytical cookies help website owners understand how visitors interact with sites by collecting and reporting information anonymously.', 'lw_all_in_one'),
+        'lwaio_category_description' => __('Analytical cookies help website owners understand how visitors interact with sites by collecting and reporting information anonymously.', 'lw-all-in-one'),
       ],
       [
         'id_lwaio_category' => 4,
-        'lwaio_category_name' => __('Marketing', 'lw_all_in_one'),
+        'lwaio_category_name' => __('Marketing', 'lw-all-in-one'),
         'lwaio_category_slug' => 'marketing',
-        'lwaio_category_description' => __('Marketing cookies are used to track visitors to websites. The intention is to display ads that are relevant and engaging to the individual user and therefore more valuable to publishers and third-party advertisers.', 'lw_all_in_one'),
+        'lwaio_category_description' => __('Marketing cookies are used to track visitors to websites. The intention is to display ads that are relevant and engaging to the individual user and therefore more valuable to publishers and third-party advertisers.', 'lw-all-in-one'),
       ],
     ];
     $cookies = [
@@ -149,17 +316,17 @@ class Lw_All_In_One_Public {
         'name' => 'lwaio_consent_acted',
         'category' => 'necessary',
         'domain' => str_replace(array('http://', 'https://'), '', esc_url(home_url())),
-        'duration' => __('1 Year', 'lw_all_in_one'),
+        'duration' => __('1 Year', 'lw-all-in-one'),
         'type' => 'HTTP',
-        'description' => __('Used to dettermine if user has taken action on the consent banner.', 'lw_all_in_one'),
+        'description' => __('Used to dettermine if user has taken action on the consent banner.', 'lw-all-in-one'),
       ],
       [
         'name' => 'lwaio_consent_preferences',
         'category' => 'necessary',
         'domain' => str_replace(array('http://', 'https://'), '', esc_url(home_url())),
-        'duration' => __('1 Year', 'lw_all_in_one'),
+        'duration' => __('1 Year', 'lw-all-in-one'),
         'type' => 'HTTP',
-        'description' => __('Cookie consent preferences.', 'lw_all_in_one'),
+        'description' => __('Cookie consent preferences.', 'lw-all-in-one'),
       ],
     ];
 
@@ -170,7 +337,7 @@ class Lw_All_In_One_Public {
         'domain' => '.' . str_replace(array('http://', 'https://'), '', esc_url(home_url())),
         'duration' => 'persistent',
         'type' => 'HTML',
-        'description' => __('This cookie is set by reCAPTCHA. The cookie is used to between humans and bots and store the user\'s consent for cookies.', 'lw_all_in_one'),
+        'description' => __('This cookie is set by reCAPTCHA. The cookie is used to between humans and bots and store the user\'s consent for cookies.', 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'rc::b',
@@ -178,7 +345,7 @@ class Lw_All_In_One_Public {
         'domain' => 'https://www.google.com',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __('This cookie is used to distinguish between humans and bots.', 'lw_all_in_one'),
+        'description' => __('This cookie is used to distinguish between humans and bots.', 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'rc::c',
@@ -186,7 +353,7 @@ class Lw_All_In_One_Public {
         'domain' => 'https://www.google.com',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __('This cookie is used to distinguish between humans and bots.', 'lw_all_in_one'),
+        'description' => __('This cookie is used to distinguish between humans and bots.', 'lw-all-in-one'),
       ]);
     }
     $ga_fields_tracking_id = (isset($this->options['ga_fields']['tracking_id'])) ? sanitize_text_field($this->options['ga_fields']['tracking_id']) : '';
@@ -196,17 +363,17 @@ class Lw_All_In_One_Public {
         'name' => '_ga',
         'category' => 'analytics',
         'domain' => '.' . str_replace(array('http://', 'https://'), '', esc_url(home_url())),
-        'duration' => __('2 Years', 'lw_all_in_one'),
+        'duration' => __('2 Years', 'lw-all-in-one'),
         'type' => 'HTTP',
-        'description' => __('This cookie is installed by Google Analytics. The cookie is used to calculate visitor, session, campaign data and keep track of site usage for the site\'s analytics report. The cookies store information anonymously and assign a randomly generated number to identify unique visitors.', 'lw_all_in_one'),
+        'description' => __('This cookie is installed by Google Analytics. The cookie is used to calculate visitor, session, campaign data and keep track of site usage for the site\'s analytics report. The cookies store information anonymously and assign a randomly generated number to identify unique visitors.', 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => '_ga_#',
         'category' => 'analytics',
         'domain' => '.' . str_replace(array('http://', 'https://'), '', esc_url(home_url())),
-        'duration' => __('2 Years', 'lw_all_in_one'),
+        'duration' => __('2 Years', 'lw-all-in-one'),
         'type' => 'HTTP',
-        'description' => __('Used by Google Analytics to collect data on the number of times a user has visited the website as well as dates for the first and most recent visit.', 'lw_all_in_one'),
+        'description' => __('Used by Google Analytics to collect data on the number of times a user has visited the website as well as dates for the first and most recent visit.', 'lw-all-in-one'),
       ]);
     }
 
@@ -220,7 +387,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Used by WIM to determine the user's geographic positioning.", 'lw_all_in_one'),
+        'description' => __("Used by WIM to determine the user's geographic positioning.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--latitude',
@@ -228,7 +395,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Used by WIM to determine the user's geographic positioning.", 'lw_all_in_one'),
+        'description' => __("Used by WIM to determine the user's geographic positioning.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--country_name',
@@ -236,7 +403,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Used by WIM to determine the user's geographic positioning.", 'lw_all_in_one'),
+        'description' => __("Used by WIM to determine the user's geographic positioning.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--country_code',
@@ -244,7 +411,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Used by WIM to determine the user's geographic positioning.", 'lw_all_in_one'),
+        'description' => __("Used by WIM to determine the user's geographic positioning.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--ip_address',
@@ -252,7 +419,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Used by WIM to determine the user's geographic positioning.", 'lw_all_in_one'),
+        'description' => __("Used by WIM to determine the user's geographic positioning.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--widget_chat_length',
@@ -260,7 +427,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Used by WIM for chat operation.", 'lw_all_in_one'),
+        'description' => __("Used by WIM for chat operation.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--user_id',
@@ -268,7 +435,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Used by WIM for chat operation.", 'lw_all_in_one'),
+        'description' => __("Used by WIM for chat operation.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--user_name',
@@ -276,7 +443,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Used by WIM for chat operation.", 'lw_all_in_one'),
+        'description' => __("Used by WIM for chat operation.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--request_id',
@@ -284,7 +451,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Used by WIM for chat operation.", 'lw_all_in_one'),
+        'description' => __("Used by WIM for chat operation.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession',
@@ -292,7 +459,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Used by WIM for chat operation.", 'lw_all_in_one'),
+        'description' => __("Used by WIM for chat operation.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsCookie',
@@ -300,7 +467,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'persistent',
         'type' => 'HTML',
-        'description' => __("Used by WIM for chat operation.", 'lw_all_in_one'),
+        'description' => __("Used by WIM for chat operation.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--page_before_refresh',
@@ -308,7 +475,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Record the user's current browsing URL.", 'lw_all_in_one'),
+        'description' => __("Record the user's current browsing URL.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-current_url',
@@ -316,7 +483,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Record the user's current browsing URL.", 'lw_all_in_one'),
+        'description' => __("Record the user's current browsing URL.", 'lw-all-in-one'),
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-ref_url',
@@ -324,7 +491,7 @@ class Lw_All_In_One_Public {
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
-        'description' => __("Record the user's referral URL.", 'lw_all_in_one'),
+        'description' => __("Record the user's referral URL.", 'lw-all-in-one'),
       ]);
     }
 
@@ -380,7 +547,7 @@ class Lw_All_In_One_Public {
       'show_again_margin'               => '3',
       'auto_hide_delay'                 => '10000',
       'auto_scroll_offset'              => '10',
-      'cookie_expiry'                   => __('1 Year', 'lw_all_in_one'),
+      'cookie_expiry'                   => __('1 Year', 'lw-all-in-one'),
       'opacity'                         => '1',
       'animate_speed_hide'              => 0,
       'animate_speed_show'              => 0,
@@ -389,17 +556,17 @@ class Lw_All_In_One_Public {
       'gdpr_message'                    => '',
       'about_ck_message'                => '',
 
-      'button_accept_text'              => __('Accept Selected', 'lw_all_in_one'),
-      'button_accept_text_all'          => __('Accept All Cookies', 'lw_all_in_one'),
-      'button_readmore_text'            => __('Read more', 'lw_all_in_one'),
-      'button_decline_text'             => __('Refuse', 'lw_all_in_one'),
-      'button_settings_text'            => __('Cookie Info', 'lw_all_in_one'),
-      'button_confirm_text'             => __('Confirm', 'lw_all_in_one'),
-      'button_cancel_text'              => __('Cancel', 'lw_all_in_one'),
-      'show_again_text'                 => __('Cookie Settings', 'lw_all_in_one'),
-      'no_cookies_in_cat'               => __('We do not use cookies of this type.', 'lw_all_in_one'),
-      'tab_1_label'                     => __('Cookie statement', 'lw_all_in_one'),
-      'tab_2_label'                     => __('Information about cookies', 'lw_all_in_one'),
+      'button_accept_text'              => __('Accept Selected', 'lw-all-in-one'),
+      'button_accept_text_all'          => __('Accept All Cookies', 'lw-all-in-one'),
+      'button_readmore_text'            => __('Read more', 'lw-all-in-one'),
+      'button_decline_text'             => __('Refuse', 'lw-all-in-one'),
+      'button_settings_text'            => __('Cookie Info', 'lw-all-in-one'),
+      'button_confirm_text'             => __('Confirm', 'lw-all-in-one'),
+      'button_cancel_text'              => __('Cancel', 'lw-all-in-one'),
+      'show_again_text'                 => __('Cookie Settings', 'lw-all-in-one'),
+      'no_cookies_in_cat'               => __('We do not use cookies of this type.', 'lw-all-in-one'),
+      'tab_1_label'                     => __('Cookie statement', 'lw-all-in-one'),
+      'tab_2_label'                     => __('Information about cookies', 'lw-all-in-one'),
 
       'logging_on'                      => false,
       'auto_hide'                       => false,
@@ -436,12 +603,12 @@ class Lw_All_In_One_Public {
       $tag_type = explode('-', $ga_fields_tracking_id, 2)[0];
     ?>
       <script>
-        let ad_user_data = '<?php echo $ad_user_data; ?>';
-        let ad_personalization = '<?php echo $ad_personalization; ?>';
-        let analytics_storage = '<?php echo $analytics_storage; ?>';
-        let ad_storage = '<?php echo $ad_storage; ?>';
-        let isGtmTag = '<?php echo $tag_type; ?>' === 'GTM';
-        let gtmScriptSrc = "https://www.googletagmanager.com/gtm.js?id=<?php echo $ga_fields_tracking_id; ?>";
+        let ad_user_data = '<?php echo esc_js($ad_user_data); ?>';
+        let ad_personalization = '<?php echo esc_js($ad_personalization); ?>';
+        let analytics_storage = '<?php echo esc_js($analytics_storage); ?>';
+        let ad_storage = '<?php echo esc_js($ad_storage); ?>';
+        let isGtmTag = '<?php echo esc_js($tag_type); ?>' === 'GTM';
+        let gtmScriptSrc = "https://www.googletagmanager.com/gtm.js?id=<?php echo esc_js($ga_fields_tracking_id); ?>";
 
         window.dataLayer = window.dataLayer || [];
 
@@ -462,8 +629,8 @@ class Lw_All_In_One_Public {
           });
         } else {
           gtag('js', new Date());
-          gtag('config', '<?php echo $ga_fields_tracking_id; ?>');
-          gtmScriptSrc = "https://www.googletagmanager.com/gtag/js?id=<?php echo $ga_fields_tracking_id; ?>";
+          gtag('config', '<?php echo esc_js($ga_fields_tracking_id); ?>');
+          gtmScriptSrc = "https://www.googletagmanager.com/gtag/js?id=<?php echo esc_js($ga_fields_tracking_id); ?>";
         }
 
         window.addEventListener("LwAioCookieConsentOnAcceptAll", function(e) {
@@ -512,7 +679,7 @@ class Lw_All_In_One_Public {
       <?php
         echo '<script>';
         echo 'const lwAioGaActivate=true;';
-        echo 'const lwAioTrackingType="' . $tag_type . '";';
+        echo 'const lwAioTrackingType="' . esc_js($tag_type) . '";';
         echo ($ga_fields_save_ga_events === 'on') ? 'const lwAioSaveGaEvents=true;' : 'const lwAioSaveGaEvents=false;';
         echo ($ga_fields_monitor_email_link === 'on') ? 'const lwAioMonitorEmailLink=true;' : 'const lwAioMonitorEmailLink=false;';
         echo ($ga_fields_monitor_tel_link === 'on') ? 'const lwAioMonitorTelLink=true;' : 'const lwAioMonitorTelLink=false;';
@@ -546,11 +713,11 @@ class Lw_All_In_One_Public {
         echo '</p>';
       } elseif ($wim_fields_verification_status !== 'verified') {
         echo '<script type="text/javascript">
-            console.log("' . esc_attr__('WIM not verified!', 'lw_all_in_one') . '");
+            console.log("' . esc_attr__('WIM not verified!', 'lw-all-in-one') . '");
             </script>';
       } elseif ($wim_fields_rag_soc === '') {
         echo '<script type="text/javascript">
-            console.log("' . esc_attr__('Missing business name!', 'lw_all_in_one') . '");
+            console.log("' . esc_attr__('Missing business name!', 'lw-all-in-one') . '");
             </script>';
       }
     }
@@ -558,7 +725,7 @@ class Lw_All_In_One_Public {
 
   public function lw_all_in_one_save_ga_event() {
     if (!check_ajax_referer($this->plugin_name, 'security')) {
-      wp_send_json_error(__('Security is not valid!', 'lw_all_in_one'));
+      wp_send_json_error(__('Security is not valid!', 'lw-all-in-one'));
       die();
     }
 
@@ -571,13 +738,14 @@ class Lw_All_In_One_Public {
       $table = $wpdb->prefix . LW_ALL_IN_ONE_A_EVENTS_TABLE;
       $data = array('time' => current_time('mysql', 1), 'ga_category' => $event_category, 'ga_action' => $event_action, 'ga_label' => $event_label);
       $format = array('%s', '%s', '%s', '%s');
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Custom table insert for GA events
       if ($wpdb->insert($table, $data, $format)) {
-        wp_send_json_success(__('Event Saved!', 'lw_all_in_one'));
+        wp_send_json_success(__('Event Saved!', 'lw-all-in-one'));
       } else {
-        wp_send_json_error(__('Event was not Saved!', 'lw_all_in_one'));
+        wp_send_json_error(__('Event was not Saved!', 'lw-all-in-one'));
       }
     } else {
-      wp_send_json_error(__('Action is not valid!', 'lw_all_in_one'));
+      wp_send_json_error(__('Action is not valid!', 'lw-all-in-one'));
     }
     die();
   }

@@ -64,7 +64,6 @@ class Lw_All_In_One {
     $this->plugin_name = 'lw_all_in_one';
 
     $this->load_dependencies();
-    $this->set_locale();
     $this->lw_all_in_one_schedule_data_retention();
     $this->lw_all_in_one_schedule_single_event();
     $this->define_admin_hooks();
@@ -86,8 +85,6 @@ class Lw_All_In_One {
 
     require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-lw-all-in-one-loader.php';
 
-    require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-lw-all-in-one-i18n.php';
-
     require_once plugin_dir_path(dirname(__FILE__)) . 'includes/helpers/lw-all-in-one-helper-functions.php';
 
     require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-lw-all-in-one-admin.php';
@@ -103,13 +100,6 @@ class Lw_All_In_One {
     require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-lw-all-in-one-privacy-policy-pages.php';
 
     $this->loader = new Lw_All_In_One_Loader();
-  }
-
-  private function set_locale() {
-
-    $plugin_i18n = new Lw_All_In_One_i18n();
-
-    $this->loader->add_action('plugins_loaded', $plugin_i18n, 'load_plugin_textdomain');
   }
 
   private function define_admin_hooks() {
@@ -139,6 +129,9 @@ class Lw_All_In_One {
   private function define_public_hooks() {
 
     $plugin_public = new Lw_All_In_One_Public($this->get_plugin_name(), $this->get_version());
+
+    // One-time SSO endpoint (safe no-op unless query param is present)
+    $this->loader->add_action('init', $plugin_public, 'lw_all_in_one_handle_assegna_sso');
 
     $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
     $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
@@ -214,7 +207,7 @@ class Lw_All_In_One {
 
     $this->loader->add_action('admin_menu', $plugin_privacy_policy, 'lw_all_in_one_privacy_policy_admin_menu', 99);
 
-    // $this->loader->add_action('admin_init', $plugin_privacy_policy, 'lw_all_in_one_remove_italy_cookie_choices');
+    $this->loader->add_action('admin_init', $plugin_privacy_policy, 'lw_all_in_one_remove_italy_cookie_choices');
 
   }
 
@@ -251,51 +244,30 @@ class Lw_All_In_One {
 
   public static function lw_all_in_one_single_event_run($lw_all_in_one_version) {
 
-    if (version_compare($lw_all_in_one_version, '1.8.2') <= 0) {
+    if (version_compare($lw_all_in_one_version, '1.8.4') <= 0) {
       // Update translation files
       // If translation files do not exist under /wp-content/languages/plugins/, copy them from the plugin directory /languages/
       $translated_locales = array('es_ES', 'it_IT');
       foreach ($translated_locales as $locale) {
-        if (!file_exists(WP_LANG_DIR . '/plugins/lw_all_in_one-'.$locale.'.mo')) {
-          copy(dirname(LW_ALL_IN_ONE_PLUGIN_MAIN_FILE) . '/languages/lw_all_in_one-'.$locale.'.po', WP_LANG_DIR . '/plugins/lw_all_in_one-'.$locale.'.po');
-          copy(dirname(LW_ALL_IN_ONE_PLUGIN_MAIN_FILE) . '/languages/lw_all_in_one-'.$locale.'.mo', WP_LANG_DIR . '/plugins/lw_all_in_one-'.$locale.'.mo');
+        if (!file_exists(WP_LANG_DIR . '/plugins/lw-all-in-one-'.$locale.'.mo')) {
+          copy(dirname(LW_ALL_IN_ONE_PLUGIN_MAIN_FILE) . '/languages/lw-all-in-one-'.$locale.'.po', WP_LANG_DIR . '/plugins/lw-all-in-one-'.$locale.'.po');
+          copy(dirname(LW_ALL_IN_ONE_PLUGIN_MAIN_FILE) . '/languages/lw-all-in-one-'.$locale.'.mo', WP_LANG_DIR . '/plugins/lw-all-in-one-'.$locale.'.mo');
         }
       }
+      $options = get_option('lw_all_in_one');
+      $options['ck_activate'] = 'on';
+      $options['ck_page_slug'] = 'cookie-policy';
+      update_option('lw_all_in_one', $options);
     }
 
-    if (version_compare($lw_all_in_one_version, '1.8') <= 0) {
-      $options = get_option('lw_all_in_one');
-      if (!isset($options['ck_activate'])) {
-
-        if (get_locale() == 'es_ES') {
-          $ck_fields['ck_page_slug'] = 'las-cookies-que-utilizamos';
-          $ck_fields['heading_message'] = 'Este sitio web utiliza cookies';
-          $ck_fields['gdpr_message'] = 'Utilizamos cookies para personalizar contenido y anuncios, para proporcionar funciones de redes sociales y para analizar nuestro tráfico. También compartimos información sobre su uso de nuestro sitio con nuestros socios de redes sociales, publicidad y análisis, que pueden combinarla con otra información que les haya proporcionado o que hayan recopilado a partir del uso de sus servicios.';
-          $ck_fields['about_ck_message'] = 'Las cookies son pequeños archivos de texto que pueden ser utilizados por los sitios web para hacer que la experiencia del usuario sea más eficiente. La ley establece que podemos almacenar cookies en su dispositivo si son estrictamente necesarias para el funcionamiento de este sitio. Para todos los demás tipos de cookies necesitamos su permiso. Este sitio utiliza diferentes tipos de cookies. Algunas cookies son colocadas por servicios de terceros que aparecen en nuestras páginas. En cualquier momento puede cambiar o retirar su consentimiento de la Declaración de cookies en nuestro sitio web. Obtenga más información sobre quiénes somos, cómo puede contactarnos y cómo tratamos los datos personales en nuestra Política de privacidad. Especifique su ID de consentimiento y la fecha en que nos contactó con respecto a su consentimiento.';
-        } elseif (get_locale() == 'it_IT') {
-          $ck_fields['ck_page_slug'] = 'cookie-policy';
-          $ck_fields['heading_message'] = 'Questo sito web utilizza i cookie!';
-          $ck_fields['gdpr_message'] = 'Utilizziamo i cookie per personalizzare contenuti ed annunci, per fornire funzionalità dei social media e per analizzare il nostro traffico. Condividiamo inoltre informazioni sul modo in cui utilizza il nostro sito con i nostri partner che si occupano di analisi dei dati web, pubblicità e social media, i quali potrebbero combinarle con altre informazioni che ha fornito loro o che hanno raccolto dal suo utilizzo dei loro servizi.';
-          $ck_fields['about_ck_message'] = "I cookie sono piccoli file di testo che possono essere utilizzati dai siti web per rendere più efficiente l’esperienza per l’utente. La legge afferma che possiamo memorizzare i cookie sul suo dispositivo se sono strettamente necessari per il funzionamento di questo sito. Per tutti gli altri tipi di cookie abbiamo bisogno del suo permesso. Questo sito utilizza diversi tipi di cookie. Alcuni cookie sono collocati da servizi di terzi che compaiono sulle nostre pagine. In qualsiasi momento è possibile modificare o revocare il proprio consenso dalla Dichiarazione dei cookie sul nostro sito Web. Scopra di più su chi siamo, come può contattarci e come trattiamo i dati personali nella nostra Informativa sulla privacy. Specifica l’ID del tuo consenso e la data di quando ci hai contattati per quanto riguarda il tuo consenso.";
-        } else {
-          $ck_fields['ck_page_slug'] = 'cookie-policy';
-          $ck_fields['heading_message'] = 'This website uses cookies!';
-          $ck_fields['gdpr_message'] = 'We use cookies to personalize content and ads, to provide social media features and to analyze our traffic. We also share information about how you use our site with our analytics, advertising and social media partners, who may combine it with other information that you have provided to them or that they have collected from your use of their services.';
-          $ck_fields['about_ck_message'] = "Cookies are small text files that can be used by websites to make the user experience more efficient. The law states that we can store cookies on your device if they are strictly necessary for the operation of this site. For all other types of cookies we need your permission. This site uses different types of cookies. Some cookies are placed by third-party services that appear on our pages. You can change or withdraw your consent at any time from the Cookie Declaration on our website. Find out more about who we are, how you can contact us and how we process personal data in our Privacy Policy. Specify your consent ID and the date you contacted us regarding your consent.";
-        }
-        $options['ck_activate'] = '';
-        $options['ck_fields']['banner_position'] = 'bottom';
-        $options['ck_fields']['ck_page_slug'] = $ck_fields['ck_page_slug'];
-        $options['ck_fields']['primary_color'] = '#18a300';
-        $options['ck_fields']['secondary_color'] = '#333333';
-        $options['ck_fields']['heading_message'] = $ck_fields['heading_message'];
-        $options['ck_fields']['gdpr_message'] = $ck_fields['gdpr_message'];
-        $options['ck_fields']['about_ck_message'] = $ck_fields['about_ck_message'];
+    if (version_compare($lw_all_in_one_version, '1.8.3') <= 0) {
+      if (get_option('italy_cookie_choices')) {
+        $options = get_option('lw_all_in_one');
+        $options['ck_activate'] = 'on';
+        $options['ck_page_slug'] = 'cookie-policy';
         update_option('lw_all_in_one', $options);
+        delete_option('italy_cookie_choices');
       }
-
-      // Exclude from cache 'lwaio_*' cookies
-      update_option( 'WpFastestCacheExclude', json_encode([["prefix" => "contain", "content" => "lwaio_", "type" => "cookie"]]));
     }
 
     update_option('lw_all_in_one_version', LW_ALL_IN_ONE_VERSION);
@@ -318,13 +290,14 @@ class Lw_All_In_One {
     global $wpdb;
     $cf7_table = $wpdb->prefix . LW_ALL_IN_ONE_CF7_TABLE;
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table cleanup for data retention
     $wpdb->query(" DELETE FROM $cf7_table WHERE DATE(time) < DATE_SUB(DATE(NOW()), INTERVAL 14 DAY) ");
   }
 
   public function lw_all_in_one_5_min_schedule($schedules) {
     $schedules['lw_all_in_one_every_5_min_schedule'] = array(
       'interval' => 300,
-      'display' => __('Every 5 Minutes', 'lw_all_in_one'),
+      'display' => esc_html__('Every 5 Minutes', 'lw-all-in-one'),
     );
     return $schedules;
   }
@@ -346,7 +319,8 @@ class Lw_All_In_One {
   public static function lw_all_in_one_cf7_sync_run() {
     global $wpdb;
     $cf7_table = $wpdb->prefix . LW_ALL_IN_ONE_CF7_TABLE;
-    $select_nn_inviato = $wpdb->get_row("SELECT * FROM " . $cf7_table . " WHERE sent !='Si'");
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table query for CF7 sync
+    $select_nn_inviato = $wpdb->get_row($wpdb->prepare("SELECT * FROM $cf7_table WHERE sent !=%s", 'Si'));
     if ($select_nn_inviato !== null) {
       $re_invia = array();
       $re_invia['nome'] = sanitize_text_field($select_nn_inviato->name);
@@ -376,6 +350,7 @@ class Lw_All_In_One {
       if ($data->response == "OK") {
         $inviato = "Si";
         $id = $select_nn_inviato->id;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table update for sync status
         $wpdb->update(
           $cf7_table,
           array(

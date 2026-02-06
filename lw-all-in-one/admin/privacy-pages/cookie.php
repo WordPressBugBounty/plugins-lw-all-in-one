@@ -17,12 +17,12 @@ if ($page_cookie->ID != '') {
   if (is_wp_error($post_id)) {
     $errors = $post_id->get_error_messages();
     $create_pages_resposes['cookie-policy']['status'] = 'error';
-    $create_pages_resposes['cookie-policy']['message'] = esc_attr__("cookie-policy could not be update!", 'lw_all_in_one');
+    $create_pages_resposes['cookie-policy']['message'] = esc_attr__("cookie-policy could not be update!", 'lw-all-in-one');
     $create_pages_resposes['cookie-policy']['action'] = 'updated';
     $create_pages_resposes['cookie-policy']['post_id'] = $post_id;
   } else {
     $create_pages_resposes['cookie-policy']['status'] = 'success';
-    $create_pages_resposes['cookie-policy']['message'] = esc_attr__("cookie-policy updated successfully!", 'lw_all_in_one');
+    $create_pages_resposes['cookie-policy']['message'] = esc_attr__("cookie-policy updated successfully!", 'lw-all-in-one');
     $create_pages_resposes['cookie-policy']['action'] = 'updated';
     $create_pages_resposes['cookie-policy']['post_id'] = $post_id;
   }
@@ -37,12 +37,12 @@ if ($page_cookie->ID != '') {
   $post_id = wp_insert_post($cookie_page, true);
   if (is_wp_error($post_id)) {
     $create_pages_resposes['cookie-policy']['status'] = 'error';
-    $create_pages_resposes['cookie-policy']['message'] = esc_attr__("cookie-policy could not be created!", 'lw_all_in_one');
+    $create_pages_resposes['cookie-policy']['message'] = esc_attr__("cookie-policy could not be created!", 'lw-all-in-one');
     $create_pages_resposes['cookie-policy']['action'] = 'created';
     $create_pages_resposes['cookie-policy']['post_id'] = $post_id;
   } else {
     $create_pages_resposes['cookie-policy']['status'] = 'success';
-    $create_pages_resposes['cookie-policy']['message'] = esc_attr__("cookie-policy created successfully!", 'lw_all_in_one');
+    $create_pages_resposes['cookie-policy']['message'] = esc_attr__("cookie-policy created successfully!", 'lw-all-in-one');
     $create_pages_resposes['cookie-policy']['action'] = 'created';
     $create_pages_resposes['cookie-policy']['post_id'] = $post_id;
   }

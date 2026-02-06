@@ -19,6 +19,9 @@
 class Lw_All_In_One_Activator {
 
   public static function activate() {
+    // Suppress any output during activation
+    ob_start();
+    
     if (!get_option('lw_all_in_one_version')) {
       add_option('lw_all_in_one_version', LW_ALL_IN_ONE_VERSION);
     }
@@ -37,6 +40,10 @@ class Lw_All_In_One_Activator {
       $lingua = $wim_old_options['lingua'];
       $messaggio_0 = $wim_old_options['messaggio_0'];
       $messaggio_1 = $wim_old_options['messaggio_1'];
+    }
+    if (get_option('italy_cookie_choices')) {
+      $ck_activate = 'on';
+      delete_option('italy_cookie_choices');
     }
     // Check if LW Contact Form 7 Addon plugin is activated
     if (is_plugin_active('lw-contact-form/localweb.php')) {
@@ -62,12 +69,18 @@ class Lw_All_In_One_Activator {
       }
     }
 
-    if (get_locale() == 'es_ES') {
+    // Get site locale without triggering translation loading
+    $site_locale = get_option('WPLANG');
+    if (empty($site_locale)) {
+      $site_locale = 'en_US'; // Default locale
+    }
+
+    if ($site_locale == 'es_ES') {
       $ck_fields['ck_page_slug'] = 'las-cookies-que-utilizamos';
       $ck_fields['heading_message'] = 'Este sitio web utiliza cookies';
       $ck_fields['gdpr_message'] = 'Utilizamos cookies para personalizar contenido y anuncios, para proporcionar funciones de redes sociales y para analizar nuestro tráfico. También compartimos información sobre su uso de nuestro sitio con nuestros socios de redes sociales, publicidad y análisis, que pueden combinarla con otra información que les haya proporcionado o que hayan recopilado a partir del uso de sus servicios.';
       $ck_fields['about_ck_message'] = 'Las cookies son pequeños archivos de texto que pueden ser utilizados por los sitios web para hacer que la experiencia del usuario sea más eficiente. La ley establece que podemos almacenar cookies en su dispositivo si son estrictamente necesarias para el funcionamiento de este sitio. Para todos los demás tipos de cookies necesitamos su permiso. Este sitio utiliza diferentes tipos de cookies. Algunas cookies son colocadas por servicios de terceros que aparecen en nuestras páginas. En cualquier momento puede cambiar o retirar su consentimiento de la Declaración de cookies en nuestro sitio web. Obtenga más información sobre quiénes somos, cómo puede contactarnos y cómo tratamos los datos personales en nuestra Política de privacidad. Especifique su ID de consentimiento y la fecha en que nos contactó con respecto a su consentimiento.';
-    } elseif (get_locale() == 'it_IT') {
+    } elseif ($site_locale == 'it_IT') {
       $ck_fields['ck_page_slug'] = 'cookie-policy';
       $ck_fields['heading_message'] = 'Questo sito web utilizza i cookie!';
       $ck_fields['gdpr_message'] = 'Utilizziamo i cookie per personalizzare contenuti ed annunci, per fornire funzionalità dei social media e per analizzare il nostro traffico. Condividiamo inoltre informazioni sul modo in cui utilizza il nostro sito con i nostri partner che si occupano di analisi dei dati web, pubblicità e social media, i quali potrebbero combinarle con altre informazioni che ha fornito loro o che hanno raccolto dal suo utilizzo dei loro servizi.';
@@ -147,6 +160,7 @@ class Lw_All_In_One_Activator {
     $cf7_table = $wpdb->prefix . LW_ALL_IN_ONE_CF7_TABLE;
 
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table check
     if ($wpdb->get_var("show tables like '$a_events_table'") != $a_events_table) {
       $sql1 = "CREATE TABLE $a_events_table (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -156,9 +170,11 @@ class Lw_All_In_One_Activator {
             ga_label varchar(250) DEFAULT '' NULL,
             PRIMARY KEY (id)
           ) $charset_collate;";
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom table creation
       dbDelta($sql1);
     }
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table check
     if ($wpdb->get_var("show tables like '$cf7_table'") != $cf7_table) {
       $sql2 = "CREATE TABLE $cf7_table (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -175,16 +191,19 @@ class Lw_All_In_One_Activator {
             sent varchar(2) DEFAULT '' NULL,
             PRIMARY KEY (id)
           ) $charset_collate;";
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom table creation
       dbDelta($sql2);
     }
 
     $old_cf7_table = $wpdb->prefix . 'inserimenti_cf';
     $old_cf7_table_transfer_err = array();
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Legacy table check
     if ($wpdb->get_var("show tables like '$old_cf7_table'") == $old_cf7_table) {
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Legacy table migration
       $inserimenti_cf_results = $wpdb->get_results("SELECT * FROM $old_cf7_table");
       if ($wpdb->num_rows > 0) {
         foreach ($inserimenti_cf_results as $cf) {
-          $new_time = date('Y-m-d H:i:s', $cf->time);
+          $new_time = gmdate('Y-m-d H:i:s', $cf->time);
           $old_data = array('subject' => $cf->soggetto, 'message' => $cf->messaggio, 'name' => $cf->nome, 'surname' => $cf->cognome, 'time' => $new_time, 'email' => $cf->email, 'phone' => $cf->telefono, 'tipo_Contratto' => $cf->tipo_Contratto, 'id_Contratto' => $cf->id_Contratto, 'submited_page' => $cf->submited_page, 'sent' => $cf->inviato);
           $format = array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');
           if (!$wpdb->insert($cf7_table, $old_data, $format)) {
@@ -193,6 +212,7 @@ class Lw_All_In_One_Activator {
         }
       }
       if (empty($old_cf7_table_transfer_err)) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Legacy table cleanup
         $wpdb->query("DROP TABLE IF EXISTS $old_cf7_table");
       }
     }
@@ -212,9 +232,9 @@ class Lw_All_In_One_Activator {
     if (is_plugin_active('woocommerce-google-analytics-integration/woocommerce-google-analytics-integration.php')) {
       deactivate_plugins('woocommerce-google-analytics-integration/woocommerce-google-analytics-integration.php');
     }
-    // if (is_plugin_active('italy-cookie-choices/italy-cookie-choices.php')) {
-    //   deactivate_plugins('italy-cookie-choices/italy-cookie-choices.php');
-    // }
+    if (is_plugin_active('italy-cookie-choices/italy-cookie-choices.php')) {
+      deactivate_plugins('italy-cookie-choices/italy-cookie-choices.php');
+    }
     if (is_plugin_active('wp-fastest-cache/wpFastestCache.php')) {
       // Exclude from cache 'lwaio_*' cookies
       update_option( 'WpFastestCacheExclude', json_encode([["prefix" => "contain", "content" => "lwaio_", "type" => "cookie"]]));
@@ -228,11 +248,13 @@ class Lw_All_In_One_Activator {
     $translated_locales = array('es_ES', 'it_IT');
     foreach ($translated_locales as $locale) {
       if (!file_exists(WP_LANG_DIR . '/plugins/lw_all_in_one-'.$locale.'.mo')) {
-        copy(dirname(LW_ALL_IN_ONE_PLUGIN_MAIN_FILE) . '/languages/lw_all_in_one-'.$locale.'.po', WP_LANG_DIR . '/plugins/lw_all_in_one-'.$locale.'.po');
-        copy(dirname(LW_ALL_IN_ONE_PLUGIN_MAIN_FILE) . '/languages/lw_all_in_one-'.$locale.'.mo', WP_LANG_DIR . '/plugins/lw_all_in_one-'.$locale.'.mo');
+        @copy(dirname(LW_ALL_IN_ONE_PLUGIN_MAIN_FILE) . '/languages/lw_all_in_one-'.$locale.'.po', WP_LANG_DIR . '/plugins/lw_all_in_one-'.$locale.'.po');
+        @copy(dirname(LW_ALL_IN_ONE_PLUGIN_MAIN_FILE) . '/languages/lw_all_in_one-'.$locale.'.mo', WP_LANG_DIR . '/plugins/lw_all_in_one-'.$locale.'.mo');
       }
     }
 
+    // Clean up any output that may have been generated
+    ob_end_clean();
   }
 
 }

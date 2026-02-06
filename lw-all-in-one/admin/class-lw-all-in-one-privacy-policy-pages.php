@@ -48,7 +48,7 @@ class Lw_All_In_One_Privacy_Policy_Pages {
   }
 
   public function lw_all_in_one_privacy_policy_admin_menu() {
-    add_submenu_page($this->plugin_name, __('LocalWeb Privacy&Policy Pages Options', 'lw_all_in_one'), __('Privacy&Policy Pages', 'lw_all_in_one'), 'manage_options', 'lw_all_in_one' . '_privacy_policy', array($this, 'lw_all_in_one_privacy_policy_display_page'));
+    add_submenu_page($this->plugin_name, __('LocalWeb Privacy&Policy Pages Options', 'lw-all-in-one'), __('Privacy&Policy Pages', 'lw-all-in-one'), 'manage_options', 'lw_all_in_one' . '_privacy_policy', array($this, 'lw_all_in_one_privacy_policy_display_page'));
   }
 
   public function lw_all_in_one_privacy_policy_display_page() {
@@ -65,7 +65,7 @@ class Lw_All_In_One_Privacy_Policy_Pages {
 
   public function lw_all_in_one_create_privacy_pages() {
     if (!check_ajax_referer($this->plugin_name, 'security')) {
-      wp_send_json_error(__('Security is not valid!', 'lw_all_in_one'));
+      wp_send_json_error(__('Security is not valid!', 'lw-all-in-one'));
       die();
     }
     if (isset($_POST['action']) && $_POST['action'] === "lw_all_in_one_create_privacy_pages") {
@@ -74,7 +74,7 @@ class Lw_All_In_One_Privacy_Policy_Pages {
       $create_privacy_page = isset($_POST[ $this->plugin_name . '_privacy_page']) && $_POST[ $this->plugin_name . '_privacy_page'] == 'on';
       $create_info_dati_page = isset($_POST[ $this->plugin_name . '_trattamento_dati_page']) && $_POST[ $this->plugin_name . '_trattamento_dati_page'] == 'on';
 
-      $date = date('d-m-Y', time());
+      $date = gmdate('d-m-Y', time());
       $domain = get_option('siteurl', $_SERVER['HTTP_HOST']);
       $site_lang = get_locale();
       $create_pages_resposes = array();
@@ -147,7 +147,7 @@ class Lw_All_In_One_Privacy_Policy_Pages {
       update_option($this->plugin_name . '_privacy_pages', $created_pages_save_option);
       wp_send_json_success($create_pages_resposes);
     } else {
-      wp_send_json_error(__('Action is not valid!', 'lw_all_in_one'));
+      wp_send_json_error(__('Action is not valid!', 'lw-all-in-one'));
     }
 	  die();
   }

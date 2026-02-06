@@ -2,9 +2,9 @@
 Contributors: sajdoko
 Tags: localweb, local web, chat, wim, web instant messenger
 Requires at least: 4.8.5
-Tested up to: 6.5
-Stable tag: 1.8.2
+Tested up to: 6.8
 Requires PHP: 5.6
+Stable tag: trunk
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,7 +20,7 @@ Key Features:
 * **Google Analytics Integration:** Facilitates integration with both Google Analytics 4 (GA4) and Google Tag Manager (GTM) for advanced tracking capabilities.
 * **Contact Form 7 Integration:** Provides customization options for Contact Form 7 to optimize script and style usage based on your website’s needs.
 
-> :warning: **Note:** This plugin is intended exclusively for [LocalWeb](https://localweb.it/ "Web Marketing Agency") clients and leverages services provided by LocalWeb.
+> **Note:** This plugin is intended exclusively for [LocalWeb](https://localweb.it/ "Web Marketing Agency") clients and leverages services provided by LocalWeb.
 
 For more information, updates, and support, please visit [LocalWeb's official website](https://localweb.it/).
 
@@ -39,12 +39,23 @@ For more information, updates, and support, please visit [LocalWeb's official we
 4. Header and Footer script options plugin page.
 5. Plugin options page.
 
-== Upgrade Notice ==
-
-= 1.8.2 =
-Updated translation files
-
 == Changelog ==
+
+= 1.9.1 =
+
+* Add SSO functionality with public key verification and endpoint handling
+
+= 1.9.0 =
+
+* Updated styles for improved UI consistency
+* Enhanced accessibility features
+* Fixed various bugs and issues
+
+= 1.8.4 =
+* Enhance security and code quality by sanitizing output and database queries
+
+= 1.8.3 =
+* Activated cookie banner by default upon plugin activation.
 
 = 1.8.2 =
 * Updated translation files

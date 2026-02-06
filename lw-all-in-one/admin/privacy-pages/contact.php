@@ -15,12 +15,12 @@ if ($page_contact->ID != '') {
   $post_id = wp_update_post($contact_page, true);
   if (is_wp_error($post_id)) {
     $create_pages_resposes['informativa-trattamento-dati']['status'] = 'error';
-    $create_pages_resposes['informativa-trattamento-dati']['message'] = esc_attr__("informativa-trattamento-dati could not be update!", 'lw_all_in_one');
+    $create_pages_resposes['informativa-trattamento-dati']['message'] = esc_attr__("informativa-trattamento-dati could not be update!", 'lw-all-in-one');
     $create_pages_resposes['informativa-trattamento-dati']['action'] = 'updated';
     $create_pages_resposes['informativa-trattamento-dati']['post_id'] = $post_id;
   } else {
     $create_pages_resposes['informativa-trattamento-dati']['status'] = 'success';
-    $create_pages_resposes['informativa-trattamento-dati']['message'] = esc_attr__("informativa-trattamento-dati updated successfully!", 'lw_all_in_one');
+    $create_pages_resposes['informativa-trattamento-dati']['message'] = esc_attr__("informativa-trattamento-dati updated successfully!", 'lw-all-in-one');
     $create_pages_resposes['informativa-trattamento-dati']['action'] = 'updated';
     $create_pages_resposes['informativa-trattamento-dati']['post_id'] = $post_id;
   }
@@ -35,12 +35,12 @@ if ($page_contact->ID != '') {
   $post_id = wp_insert_post($contact_page, true);
   if (is_wp_error($post_id)) {
     $create_pages_resposes['informativa-trattamento-dati']['status'] = 'error';
-    $create_pages_resposes['informativa-trattamento-dati']['message'] = esc_attr__("informativa-trattamento-dati could not be created!", 'lw_all_in_one');
+    $create_pages_resposes['informativa-trattamento-dati']['message'] = esc_attr__("informativa-trattamento-dati could not be created!", 'lw-all-in-one');
     $create_pages_resposes['informativa-trattamento-dati']['action'] = 'created';
     $create_pages_resposes['informativa-trattamento-dati']['post_id'] = $post_id;
   } else {
     $create_pages_resposes['informativa-trattamento-dati']['status'] = 'success';
-    $create_pages_resposes['informativa-trattamento-dati']['message'] = esc_attr__("informativa-trattamento-dati created successfully!", 'lw_all_in_one');
+    $create_pages_resposes['informativa-trattamento-dati']['message'] = esc_attr__("informativa-trattamento-dati created successfully!", 'lw-all-in-one');
     $create_pages_resposes['informativa-trattamento-dati']['action'] = 'created';
     $create_pages_resposes['informativa-trattamento-dati']['post_id'] = $post_id;
   }

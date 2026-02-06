@@ -18,7 +18,9 @@ $options = get_option('lw_all_in_one');
 if (isset($options['lw_aio_fields']['delete_data']) && $options['lw_aio_fields']['delete_data'] === 'on') {
   global $wpdb;
 
+  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Plugin uninstall cleanup
   $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}lw_aio_a_events");
+  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Plugin uninstall cleanup
   $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}lw_aio_cf7");
 
   delete_option('lw_all_in_one');

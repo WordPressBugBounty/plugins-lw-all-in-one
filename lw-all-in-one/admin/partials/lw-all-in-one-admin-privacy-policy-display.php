@@ -27,19 +27,19 @@ $trattamento_dati_page_options = (isset($options['informativa-trattamento-dati']
   <?php settings_errors();?>
   <hr>
   <div class="warning">
-      <h3><?php esc_attr_e('WARNING!', 'lw_all_in_one');?></h3>
+      <h3><?php esc_attr_e('WARNING!', 'lw-all-in-one');?></h3>
     <p>
-      <?php _e('Use this section only if this website\'s domain is registered by <b>LocalWeb Srl</b>.', 'lw_all_in_one');?>
+      <?php esc_html_e('Use this section only if this website\'s domain is registered by <b>LocalWeb Srl</b>.', 'lw-all-in-one');?>
     </p>
     <p>
-      <?php esc_html_e('Link at FOOTER section pages "Informativa sul trattamento dei dati personali" and "Cookie Policy".', 'lw_all_in_one');?>
+      <?php esc_html_e('Link at FOOTER section pages "Informativa sul trattamento dei dati personali" and "Cookie Policy".', 'lw-all-in-one');?>
     </p>
     <p>
-      <?php esc_attr_e('Link "Informativa Trattamento Dati" in all contact forms of the website.', 'lw_all_in_one');?>
+      <?php esc_attr_e('Link "Informativa Trattamento Dati" in all contact forms of the website.', 'lw-all-in-one');?>
     </p>
   </div>
   <hr>
-  <form method="post" name="<?php echo $this->plugin_name; ?>_privacy_policy_pages" id="<?php echo $this->plugin_name; ?>_privacy_policy_pages" action="">
+  <form method="post" name="<?php echo esc_attr($this->plugin_name); ?>_privacy_policy_pages" id="<?php echo esc_attr($this->plugin_name); ?>_privacy_policy_pages" action="">
 
     <div id="poststuff" class="lw-aio">
       <div id="post-body" class="metabox-holder columns-2">
@@ -47,28 +47,28 @@ $trattamento_dati_page_options = (isset($options['informativa-trattamento-dati']
         <div id="post-body-content">
           <div class="postbox">
             <div class="inside">
-              <h2><?php esc_attr_e('Choose which pages you want to create:', 'lw_all_in_one');?></h2>
+              <h2><?php esc_attr_e('Choose which pages you want to create:', 'lw-all-in-one');?></h2>
               <table class="lw-aio-settings-options">
                 <tbody>
                   <tr>
                     <td colspan="2" class="lw-aio-settings-title">
                     <?php if (is_array($cookie_page_options) && !empty($cookie_page_options)) : ?>
                     <p>
-                      <?php esc_attr_e('Cookie Policy page already created: ', 'lw_all_in_one');?>
-                        <input type="hidden" value="on" name="<?php echo $this->plugin_name; ?>_cookie_page" id="<?php echo $this->plugin_name; ?>_cookie_page">
-                        <a href="<?php echo get_permalink(absint($cookie_page_options['post_id'])); ?>" target="_blank">
-                          <?php echo get_the_title(absint($cookie_page_options['post_id'])); ?>
+                      <?php esc_attr_e('Cookie Policy page already created: ', 'lw-all-in-one');?>
+                        <input type="hidden" value="on" name="<?php echo esc_attr($this->plugin_name); ?>_cookie_page" id="<?php echo esc_attr($this->plugin_name); ?>_cookie_page">
+                        <a href="<?php echo esc_url(get_permalink(absint($cookie_page_options['post_id']))); ?>" target="_blank">
+                          <?php echo esc_html(get_the_title(absint($cookie_page_options['post_id']))); ?>
                         </a>
                       </p>
                     <?php else : ?>
                       <div class="button-secondary lw-aio-settings-custom-switch">
-                        <input type="checkbox" name="<?php echo $this->plugin_name; ?>_cookie_page" class="lw-aio-settings-custom-switch-checkbox" id="<?php echo $this->plugin_name; ?>_cookie_page">
-                        <label class="lw-aio-settings-custom-switch-label" for="<?php echo $this->plugin_name; ?>_cookie_page">
+                        <input type="checkbox" name="<?php echo esc_attr($this->plugin_name); ?>_cookie_page" class="lw-aio-settings-custom-switch-checkbox" id="<?php echo esc_attr($this->plugin_name); ?>_cookie_page">
+                        <label class="lw-aio-settings-custom-switch-label" for="<?php echo esc_attr($this->plugin_name); ?>_cookie_page">
                           <div class="lw-aio-settings-custom-switch-inner privacy-page"></div>
                           <div class="lw-aio-settings-custom-switch-switch"></div>
                         </label>
                       </div>
-                      <div class="switch-desc"> <?php esc_attr_e('Create Cookie Policy page?', 'lw_all_in_one');?></div>
+                      <div class="switch-desc"> <?php esc_attr_e('Create Cookie Policy page?', 'lw-all-in-one');?></div>
                     <?php endif; ?>
                     </td>
                   </tr>
@@ -76,21 +76,21 @@ $trattamento_dati_page_options = (isset($options['informativa-trattamento-dati']
                     <td colspan="2" class="lw-aio-settings-title">
                     <?php if (is_array($privacy_page_options) && !empty($privacy_page_options)) : ?>
                     <p>
-                      <?php esc_attr_e('Privacy Policy page already created: ', 'lw_all_in_one');?>
-                      <input type="hidden" value="on" name="<?php echo $this->plugin_name; ?>_privacy_page" id="<?php echo $this->plugin_name; ?>_privacy_page">
-                      <a href="<?php echo get_permalink(absint($privacy_page_options['post_id'])); ?>" target="_blank">
-                        <?php echo get_the_title(absint($privacy_page_options['post_id'])); ?>
+                      <?php esc_attr_e('Privacy Policy page already created: ', 'lw-all-in-one');?>
+                      <input type="hidden" value="on" name="<?php echo esc_attr($this->plugin_name); ?>_privacy_page" id="<?php echo esc_attr($this->plugin_name); ?>_privacy_page">
+                      <a href="<?php echo esc_url(get_permalink(absint($privacy_page_options['post_id']))); ?>" target="_blank">
+                        <?php echo esc_html(get_the_title(absint($privacy_page_options['post_id']))); ?>
                       </a>
                     </p>
                     <?php else : ?>
                       <div class="button-secondary lw-aio-settings-custom-switch">
-                        <input type="checkbox" name="<?php echo $this->plugin_name; ?>_privacy_page" class="lw-aio-settings-custom-switch-checkbox" id="<?php echo $this->plugin_name; ?>_privacy_page">
-                        <label class="lw-aio-settings-custom-switch-label" for="<?php echo $this->plugin_name; ?>_privacy_page">
+                        <input type="checkbox" name="<?php echo esc_attr($this->plugin_name); ?>_privacy_page" class="lw-aio-settings-custom-switch-checkbox" id="<?php echo esc_attr($this->plugin_name); ?>_privacy_page">
+                        <label class="lw-aio-settings-custom-switch-label" for="<?php echo esc_attr($this->plugin_name); ?>_privacy_page">
                           <div class="lw-aio-settings-custom-switch-inner privacy-page"></div>
                           <div class="lw-aio-settings-custom-switch-switch"></div>
                         </label>
                       </div>
-                      <div class="switch-desc"> <?php esc_attr_e('Create Privacy Policy page?', 'lw_all_in_one');?></div>
+                      <div class="switch-desc"> <?php esc_attr_e('Create Privacy Policy page?', 'lw-all-in-one');?></div>
                     <?php endif; ?>
                     </td>
                   </tr>
@@ -98,21 +98,21 @@ $trattamento_dati_page_options = (isset($options['informativa-trattamento-dati']
                     <td colspan="2" class="lw-aio-settings-title">
                     <?php if (is_array($trattamento_dati_page_options) && !empty($trattamento_dati_page_options)) : ?>
                     <p>
-                      <?php esc_attr_e('Information Treatment page already created: ', 'lw_all_in_one');?>
-                      <input type="hidden" value="on" name="<?php echo $this->plugin_name; ?>_trattamento_dati_page" id="<?php echo $this->plugin_name; ?>_trattamento_dati_page">
-                      <a href="<?php echo get_permalink(absint($trattamento_dati_page_options['post_id'])); ?>" target="_blank">
-                        <?php echo get_the_title(absint($trattamento_dati_page_options['post_id'])); ?>
+                      <?php esc_attr_e('Information Treatment page already created: ', 'lw-all-in-one');?>
+                      <input type="hidden" value="on" name="<?php echo esc_attr($this->plugin_name); ?>_trattamento_dati_page" id="<?php echo esc_attr($this->plugin_name); ?>_trattamento_dati_page">
+                      <a href="<?php echo esc_url(get_permalink(absint($trattamento_dati_page_options['post_id']))); ?>" target="_blank">
+                        <?php echo esc_html(get_the_title(absint($trattamento_dati_page_options['post_id']))); ?>
                       </a>
                     </p>
                     <?php else : ?>
                       <div class="button-secondary lw-aio-settings-custom-switch">
-                        <input type="checkbox" name="<?php echo $this->plugin_name; ?>_trattamento_dati_page" class="lw-aio-settings-custom-switch-checkbox" id="<?php echo $this->plugin_name; ?>_trattamento_dati_page">
-                        <label class="lw-aio-settings-custom-switch-label" for="<?php echo $this->plugin_name; ?>_trattamento_dati_page">
+                        <input type="checkbox" name="<?php echo esc_attr($this->plugin_name); ?>_trattamento_dati_page" class="lw-aio-settings-custom-switch-checkbox" id="<?php echo esc_attr($this->plugin_name); ?>_trattamento_dati_page">
+                        <label class="lw-aio-settings-custom-switch-label" for="<?php echo esc_attr($this->plugin_name); ?>_trattamento_dati_page">
                           <div class="lw-aio-settings-custom-switch-inner privacy-page"></div>
                           <div class="lw-aio-settings-custom-switch-switch"></div>
                         </label>
                       </div>
-                      <div class="switch-desc"> <?php esc_attr_e('Create Information Treatment page?', 'lw_all_in_one');?></div>
+                      <div class="switch-desc"> <?php esc_attr_e('Create Information Treatment page?', 'lw-all-in-one');?></div>
                     <?php endif; ?>
                     </td>
                   </tr>
@@ -121,9 +121,9 @@ $trattamento_dati_page_options = (isset($options['informativa-trattamento-dati']
               <div id="created_pages_response"></div>
               <!-- <br class="clear"> -->
                 <?php if(is_array($options) && count($options) == 3) : ?>
-                  <?php submit_button(__('Update Pages', 'lw_all_in_one'), 'primary', 'submit_create_pages', TRUE);?>
+                  <?php submit_button(__('Update Pages', 'lw-all-in-one'), 'primary', 'submit_create_pages', TRUE);?>
                 <?php else: ?>
-                  <?php submit_button(__('Create Pages', 'lw_all_in_one'), 'primary', 'submit_create_pages', TRUE);?>
+                  <?php submit_button(__('Create Pages', 'lw-all-in-one'), 'primary', 'submit_create_pages', TRUE);?>
                 <?php endif; ?>
             </div>
           </div>

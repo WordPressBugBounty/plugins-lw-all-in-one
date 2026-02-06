@@ -39,7 +39,8 @@ class Lw_All_In_One_Ga_Events_List_Table {
     echo '<hr class="wp-header-end">';
     if ( ! empty( $s ) ) {
       echo sprintf( '<span class="subtitle">'
-        . __( 'Search results for &#8220;%s&#8221;', 'lw_all_in_one' )
+        /* translators: %s: Search query entered by the user */
+        . esc_html__( 'Search results for &#8220;%s&#8221;', 'lw-all-in-one')
         . '</span>', esc_html( $s ) );
     }
 
@@ -47,7 +48,7 @@ class Lw_All_In_One_Ga_Events_List_Table {
     wp_nonce_field( 'bulk_delete_records_ga', 'bulk_delete_nonce_ga' );
     echo '<input type="hidden" name="page" value="' . esc_attr( $page ) . '" />';
 
-    $ListTableClassGa->search_box( __( 'Search Records', 'lw_all_in_one' ), 'lw_all_in_one' . '-s-ga_events-record' );
+    $ListTableClassGa->search_box( __( 'Search Records', 'lw-all-in-one'), 'lw_all_in_one' . '-s-ga_events-record' );
 
     $ListTableClassGa->display();
     echo '</form>';
@@ -112,10 +113,10 @@ class Lw_All_In_One_Ga_Events_List_Table_Class extends WP_List_Table {
   public function get_columns() {
     $columns = [
       'cb' => '<input type="checkbox" />',
-      'ga_category' => esc_attr__('Category', 'lw_all_in_one'),
-      'ga_action' => esc_attr__('Action', 'lw_all_in_one'),
-      'ga_label' => esc_attr__('Label', 'lw_all_in_one'),
-      'time' => esc_attr__('Date', 'lw_all_in_one'),
+      'ga_category' => esc_attr__('Category', 'lw-all-in-one'),
+      'ga_action' => esc_attr__('Action', 'lw-all-in-one'),
+      'ga_label' => esc_attr__('Label', 'lw-all-in-one'),
+      'time' => esc_attr__('Date', 'lw-all-in-one'),
     ];
     return $columns;
   }
@@ -139,9 +140,12 @@ class Lw_All_In_One_Ga_Events_List_Table_Class extends WP_List_Table {
 
     global $wpdb;
     $table_name = $wpdb->prefix . LW_ALL_IN_ONE_A_EVENTS_TABLE;
-    $s = (isset($_REQUEST['s'])) ? sanitize_text_field($_REQUEST['s']) : '';
-    $query = $wpdb->prepare("SELECT * FROM $table_name WHERE ga_category LIKE %s OR ga_action LIKE %s OR ga_label LIKE %s", '%'.$s.'%', '%'.$s.'%', '%'.$s.'%');
-    $data = $wpdb->get_results($query, ARRAY_A);
+    $s = (isset($_REQUEST['s'])) ? sanitize_text_field(wp_unslash($_REQUEST['s'])) : '';
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table query
+    $data = $wpdb->get_results(
+      $wpdb->prepare("SELECT * FROM $table_name WHERE ga_category LIKE %s OR ga_action LIKE %s OR ga_label LIKE %s", '%'.$s.'%', '%'.$s.'%', '%'.$s.'%'),
+      ARRAY_A
+    );
 
     return $data;
   }
@@ -182,7 +186,7 @@ class Lw_All_In_One_Ga_Events_List_Table_Class extends WP_List_Table {
   }
 
   public function get_bulk_actions() {
-    $actions = ['bulk-delete-ga' => esc_attr__('Delete', 'lw_all_in_one')];
+    $actions = ['bulk-delete-ga' => esc_attr__('Delete', 'lw-all-in-one')];
     return $actions;
   }
 
@@ -190,12 +194,12 @@ class Lw_All_In_One_Ga_Events_List_Table_Class extends WP_List_Table {
 
     if ('delete-ga' === $this->current_action()) {
       if (!wp_verify_nonce($_REQUEST['_wpnonce'], 'delete')) {
-        wp_die( __('Not valid request!', 'lw_all_in_one') );
+        wp_die( esc_html__('Not valid request!', 'lw-all-in-one') );
       }
       self::wpdb_delete_records(absint(sanitize_text_field($_REQUEST['record_id'])));
     } else if ('bulk-delete-ga' === $this->current_action()) {
       if (!wp_verify_nonce($_REQUEST['bulk_delete_nonce_ga'], 'bulk_delete_records_ga')) {
-        wp_die( __('Not valid request!', 'lw_all_in_one') );
+        wp_die( esc_html__('Not valid request!', 'lw-all-in-one') );
       }
       if (isset($_REQUEST['bulk-delete-ga']) && is_array($_REQUEST['bulk-delete-ga'])) {
         $delete_ids = recursive_sanitize_array_object($_REQUEST['bulk-delete-ga']);
@@ -209,17 +213,19 @@ class Lw_All_In_One_Ga_Events_List_Table_Class extends WP_List_Table {
 
   public static function wpdb_delete_records($id) {
     global $wpdb;
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table delete
     $wpdb->delete($wpdb->prefix . LW_ALL_IN_ONE_A_EVENTS_TABLE, ['id' => absint($id)], ['%d']);
   }
 
   public function no_items() {
-    _e('No records found in the database.', 'lw_all_in_one');
+    esc_html_e('No records found in the database.', 'lw-all-in-one');
   }
 
   public static function record_count() {
     global $wpdb;
-    $sql = "SELECT COUNT(*) FROM " . $wpdb->prefix . LW_ALL_IN_ONE_A_EVENTS_TABLE;
-    return $wpdb->get_var($sql);
+    $table_name = $wpdb->prefix . LW_ALL_IN_ONE_A_EVENTS_TABLE;
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table count
+    return $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name"));
   }
 }
 
