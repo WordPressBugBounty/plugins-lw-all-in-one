@@ -275,8 +275,11 @@ class Lw_All_In_One_Admin {
   }
 
   public function sanitize_header_footer_scripts($scripts) {
+    if (!current_user_can('unfiltered_html')) {
+      return '';
+    }
     // Remove PHP code
-    $scripts = preg_replace('/<\?php.+?\?>$/ms', '', $scripts);
+    $scripts = preg_replace('/<\?.*?(?:\?>|$)/s', '', $scripts);
     return base64_encode($scripts);
   }
 
@@ -442,5 +445,53 @@ class Lw_All_In_One_Admin {
       wp_send_json_success(array('message' => __('Options were reset to defaults!', 'lw-all-in-one')));
       die();
     }
+  }
+
+  public function lw_all_in_one_admin_bar_notices_toggle($wp_admin_bar) {
+    if (!is_admin()) {
+      return;
+    }
+    $args = array(
+      'id'    => 'lw_aio_notices_toggle',
+      'title' => '<span class="ab-icon"></span><span class="ab-label">' . esc_html__('Toggle Notices', 'lw-all-in-one') . '</span>',
+      'href'  => '#',
+      'meta'  => array(
+        'class' => 'lw-aio-notices-toggle-btn',
+        'onclick' => 'document.body.classList.toggle("lw-aio-hidden-notices"); return false;'
+      )
+    );
+    $wp_admin_bar->add_node($args);
+  }
+
+  public function lw_all_in_one_hide_admin_notices_css() {
+    ?>
+    <style>
+      .lw-aio-hidden-notices div.notice, 
+      .lw-aio-hidden-notices div.updated, 
+      .lw-aio-hidden-notices div.error,
+      .lw-aio-hidden-notices .e-notice,
+      .lw-aio-hidden-notices .is-dismissible,
+      .lw-aio-hidden-notices [class*="banner"]
+      {
+        display: none !important;
+      }
+      .lw-aio-hidden-notices div.update-nag,
+      .lw-aio-hidden-notices div.core-updates {
+        display: block !important;
+      }
+      #wp-admin-bar-lw_aio_notices_toggle .ab-icon::before {
+        content: "\f534";
+        font-family: dashicons;
+      }
+      .lw-aio-hidden-notices #wp-admin-bar-lw_aio_notices_toggle .ab-icon::before {
+        color: #a0a5aa;
+      }
+    </style>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('lw-aio-hidden-notices');
+      });
+    </script>
+    <?php
   }
 }

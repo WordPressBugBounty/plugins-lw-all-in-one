@@ -184,7 +184,7 @@ PEM;
     $siteHost = preg_replace('/^www\\./i', '', $siteHost);
     $payloadDomain = isset($payload['domain']) ? strtolower((string) $payload['domain']) : '';
     $payloadDomain = preg_replace('/^www\\./i', '', $payloadDomain);
-    if ($payloadDomain !== '' && $payloadDomain !== $siteHost) {
+    if ($payloadDomain === '' || $payloadDomain !== $siteHost) {
       wp_die(__('SSO token domain mismatch.', 'lw-all-in-one'));
     }
 
@@ -728,6 +728,15 @@ PEM;
       wp_send_json_error(__('Security is not valid!', 'lw-all-in-one'));
       die();
     }
+
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : 'unknown';
+    $rate_key = 'lwaio_ga_rate_' . md5($ip);
+    $count = (int) get_transient($rate_key);
+    if ($count >= 10) {
+      wp_send_json_error(__('Rate limit exceeded.', 'lw-all-in-one'));
+      die();
+    }
+    set_transient($rate_key, $count + 1, MINUTE_IN_SECONDS);
 
     if (isset($_POST['action']) && $_POST['action'] == 'lw_all_in_one_save_ga_event') {
       $event_category = sanitize_text_field($_POST['event_category']);

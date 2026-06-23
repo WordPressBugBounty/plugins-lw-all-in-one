@@ -79,6 +79,7 @@ class Lw_All_In_One {
       $this->lw_all_in_one_schedule_cf7_sync();
     }
     $this->define_privacy_policy_hooks();
+    $this->define_performance_hooks();
   }
 
   private function load_dependencies() {
@@ -98,6 +99,10 @@ class Lw_All_In_One {
     require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-lw-all-in-one-cf7.php';
 
     require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-lw-all-in-one-privacy-policy-pages.php';
+
+    require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-lw-all-in-one-performance.php';
+
+    require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-lw-all-in-one-performance-admin.php';
 
     $this->loader = new Lw_All_In_One_Loader();
   }
@@ -124,6 +129,9 @@ class Lw_All_In_One {
 
     $this->loader->add_action('wp_head', $plugin_admin, 'lw_all_in_one_header_scripts_from_tab');
     $this->loader->add_action('wp_footer', $plugin_admin, 'lw_all_in_one_footer_scripts_from_tab');
+
+    $this->loader->add_action('admin_bar_menu', $plugin_admin, 'lw_all_in_one_admin_bar_notices_toggle', 999);
+    $this->loader->add_action('admin_head', $plugin_admin, 'lw_all_in_one_hide_admin_notices_css', 0);
   }
 
   private function define_public_hooks() {
@@ -208,6 +216,29 @@ class Lw_All_In_One {
     $this->loader->add_action('admin_menu', $plugin_privacy_policy, 'lw_all_in_one_privacy_policy_admin_menu', 99);
 
     $this->loader->add_action('admin_init', $plugin_privacy_policy, 'lw_all_in_one_remove_italy_cookie_choices');
+
+  }
+
+  private function define_performance_hooks() {
+
+    $plugin_performance = new Lw_All_In_One_Performance($this->get_plugin_name(), $this->get_version(), $this->loader);
+    $plugin_performance_admin = new Lw_All_In_One_Performance_Admin($this->get_plugin_name(), $this->get_version());
+
+    // Admin menu
+    $this->loader->add_action('admin_menu', $plugin_performance_admin, 'add_admin_menu', 99);
+
+    // Admin styles
+    $this->loader->add_action('admin_enqueue_scripts', $plugin_performance_admin, 'enqueue_admin_styles');
+
+    // Register settings
+    $this->loader->add_action('admin_init', $plugin_performance_admin, 'register_settings');
+
+    // AJAX handlers
+    $this->loader->add_action('wp_ajax_lw_all_in_one_clear_perf_cache', $plugin_performance_admin, 'clear_cache');
+    $this->loader->add_action('wp_ajax_lw_all_in_one_regenerate_critical_css', $plugin_performance_admin, 'regenerate_critical_css');
+
+    // Performance hooks are registered directly in the class
+    $plugin_performance->register_hooks();
 
   }
 

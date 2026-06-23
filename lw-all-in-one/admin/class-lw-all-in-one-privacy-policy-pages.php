@@ -64,7 +64,11 @@ class Lw_All_In_One_Privacy_Policy_Pages {
   }
 
   public function lw_all_in_one_create_privacy_pages() {
-    if (!check_ajax_referer($this->plugin_name, 'security')) {
+    if (!current_user_can('manage_options')) {
+      return;
+    }
+
+    if (isset($_GET['lwaio_create_pages']) && $_GET['lwaio_create_pages'] == 1) {
       wp_send_json_error(__('Security is not valid!', 'lw-all-in-one'));
       die();
     }

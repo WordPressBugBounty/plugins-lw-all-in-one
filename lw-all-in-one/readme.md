@@ -41,6 +41,23 @@ For more information, updates, and support, please visit [LocalWeb's official we
 
 == Changelog ==
 
+= 1.10.2 =
+
+* UX: Added an admin bar toggle to easily hide/show third-party admin notices to reduce dashboard clutter.
+
+= 1.10.1 =
+
+* Security: Fixed missing authorization capability check on privacy policy pages creation.
+* Security: Fixed stored XSS vulnerability by restricting header/footer script saving to administrators with `unfiltered_html` capability.
+* Security: Fixed HTML minification regex failure causing site blanking (Denial of Service).
+* Security: Enhanced SSO domain binding validation.
+* Security: Improved PHP code stripping in scripts sanitization.
+* Security: Implemented rate limiting for unauthenticated Google Analytics event endpoint.
+
+= 1.10.0 =
+
+* Introduced Performance Optimization module (WebP image conversion, Critical CSS extraction, HTML Minification).
+
 = 1.9.0 =
 
 * Updated styles for improved UI consistency
