@@ -92,6 +92,11 @@ class Lw_All_In_One_Admin {
   }
 
   public function validate_lw_all_in_one_settings($input) {
+    if (isset($_POST['option_page']) && $_POST['option_page'] !== $this->plugin_name) {
+      $existing_options = get_option($this->plugin_name, array());
+      return array_merge($existing_options, is_array($input) ? $input : array());
+    }
+
     $valid = array();
     $valid['ga_activate'] = (isset($input['ga_activate']) && $input['ga_activate'] === 'on') ? 'on' : '';
     $valid['ga_fields']['tracking_id'] = (isset($input['ga_fields']['tracking_id'])) ? sanitize_text_field($input['ga_fields']['tracking_id']) : '';
@@ -227,7 +232,7 @@ class Lw_All_In_One_Admin {
     if (!current_user_can('manage_options')) {
       return;
     }
-    register_setting($this->plugin_name, $this->plugin_name, array($this, 'validate_lw_all_in_one_settings'));
+    register_setting($this->plugin_name, $this->plugin_name, array('sanitize_callback' => array($this, 'validate_lw_all_in_one_settings')));
   }
 
   public function get_plugin_options($parent_key = false, $key = false) {
@@ -447,51 +452,40 @@ class Lw_All_In_One_Admin {
     }
   }
 
-  public function lw_all_in_one_admin_bar_notices_toggle($wp_admin_bar) {
-    if (!is_admin()) {
-      return;
-    }
-    $args = array(
-      'id'    => 'lw_aio_notices_toggle',
-      'title' => '<span class="ab-icon"></span><span class="ab-label">' . esc_html__('Toggle Notices', 'lw-all-in-one') . '</span>',
-      'href'  => '#',
-      'meta'  => array(
-        'class' => 'lw-aio-notices-toggle-btn',
-        'onclick' => 'document.body.classList.toggle("lw-aio-hidden-notices"); return false;'
-      )
-    );
-    $wp_admin_bar->add_node($args);
-  }
+  public function lw_all_in_one_clean_admin_notices() {
+    global $wp_filter;
 
-  public function lw_all_in_one_hide_admin_notices_css() {
-    ?>
-    <style>
-      .lw-aio-hidden-notices div.notice, 
-      .lw-aio-hidden-notices div.updated, 
-      .lw-aio-hidden-notices div.error,
-      .lw-aio-hidden-notices .e-notice,
-      .lw-aio-hidden-notices .is-dismissible,
-      .lw-aio-hidden-notices [class*="banner"]
-      {
-        display: none !important;
-      }
-      .lw-aio-hidden-notices div.update-nag,
-      .lw-aio-hidden-notices div.core-updates {
-        display: block !important;
-      }
-      #wp-admin-bar-lw_aio_notices_toggle .ab-icon::before {
-        content: "\f534";
-        font-family: dashicons;
-      }
-      .lw-aio-hidden-notices #wp-admin-bar-lw_aio_notices_toggle .ab-icon::before {
-        color: #a0a5aa;
-      }
-    </style>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        document.body.classList.add('lw-aio-hidden-notices');
-      });
-    </script>
-    <?php
+    $hooks = array( 'admin_notices', 'user_admin_notices', 'network_admin_notices' );
+    $allowed_functions = array( 'update_nag', 'maintenance_nag', 'site_admin_notice', 'settings_errors', 'welcome_panel' );
+
+    foreach ( $hooks as $hook ) {
+        if ( empty( $wp_filter[ $hook ] ) ) {
+            continue;
+        }
+
+        foreach ( $wp_filter[ $hook ]->callbacks as $priority => $callbacks ) {
+            foreach ( $callbacks as $id => $callback ) {
+                $function = $callback['function'];
+
+                $is_allowed = false;
+
+                if ( is_string( $function ) && in_array( $function, $allowed_functions ) ) {
+                    $is_allowed = true;
+                }
+
+                if ( is_array( $function ) ) {
+                    $class = is_object( $function[0] ) ? get_class( $function[0] ) : (is_string($function[0]) ? $function[0] : '');
+                    // Allow our own plugin and any core WordPress classes
+                    if ( strpos( $class, 'Lw_All_In_One' ) !== false || strpos( $class, 'WP_' ) === 0 ) {
+                        $is_allowed = true;
+                    }
+                }
+
+                if ( ! $is_allowed ) {
+                    unset( $wp_filter[ $hook ]->callbacks[ $priority ][ $id ] );
+                }
+            }
+        }
+    }
   }
 }

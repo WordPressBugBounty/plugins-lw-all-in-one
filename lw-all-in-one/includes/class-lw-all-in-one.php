@@ -130,8 +130,7 @@ class Lw_All_In_One {
     $this->loader->add_action('wp_head', $plugin_admin, 'lw_all_in_one_header_scripts_from_tab');
     $this->loader->add_action('wp_footer', $plugin_admin, 'lw_all_in_one_footer_scripts_from_tab');
 
-    $this->loader->add_action('admin_bar_menu', $plugin_admin, 'lw_all_in_one_admin_bar_notices_toggle', 999);
-    $this->loader->add_action('admin_head', $plugin_admin, 'lw_all_in_one_hide_admin_notices_css', 0);
+    $this->loader->add_action('in_admin_header', $plugin_admin, 'lw_all_in_one_clean_admin_notices', 9999);
   }
 
   private function define_public_hooks() {

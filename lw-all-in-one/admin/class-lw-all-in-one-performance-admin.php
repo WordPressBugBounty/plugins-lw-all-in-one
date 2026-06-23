@@ -119,10 +119,15 @@ class Lw_All_In_One_Performance_Admin {
    * @return   array              Sanitized settings.
    */
   public function sanitize_settings($input) {
-    $sanitized = array();
+    if (isset($_POST['option_page']) && $_POST['option_page'] !== 'lw_all_in_one_perf_settings') {
+      return $input;
+    }
+
+    // Preserve other fields that might have been validated by previous callbacks
+    $sanitized = is_array($input) ? $input : array();
 
     if (isset($input['perf_fields'])) {
-      $sanitized['perf_fields'] = array();
+      $perf_fields = array();
 
       // Sanitize checkbox fields
       $checkbox_fields = array(
@@ -141,31 +146,37 @@ class Lw_All_In_One_Performance_Admin {
       );
 
       foreach ($checkbox_fields as $field) {
-        $sanitized['perf_fields'][$field] = isset($input['perf_fields'][$field]) ? 'on' : 'off';
+        $perf_fields[$field] = (isset($input['perf_fields'][$field]) && $input['perf_fields'][$field] === 'on') ? 'on' : 'off';
       }
 
       // Sanitize text fields
       if (isset($input['perf_fields']['webp_quality'])) {
-        $sanitized['perf_fields']['webp_quality'] = absint($input['perf_fields']['webp_quality']);
-        $sanitized['perf_fields']['webp_quality'] = max(50, min(100, $sanitized['perf_fields']['webp_quality']));
+        $perf_fields['webp_quality'] = absint($input['perf_fields']['webp_quality']);
+        $perf_fields['webp_quality'] = max(50, min(100, $perf_fields['webp_quality']));
       }
 
       if (isset($input['perf_fields']['no_defer_scripts'])) {
-        $sanitized['perf_fields']['no_defer_scripts'] = sanitize_text_field($input['perf_fields']['no_defer_scripts']);
+        $perf_fields['no_defer_scripts'] = sanitize_text_field($input['perf_fields']['no_defer_scripts']);
       }
 
       if (isset($input['perf_fields']['preload_fonts'])) {
-        $sanitized['perf_fields']['preload_fonts'] = sanitize_textarea_field($input['perf_fields']['preload_fonts']);
+        $perf_fields['preload_fonts'] = sanitize_textarea_field($input['perf_fields']['preload_fonts']);
       }
 
       if (isset($input['perf_fields']['dns_prefetch_domains'])) {
-        $sanitized['perf_fields']['dns_prefetch_domains'] = sanitize_textarea_field($input['perf_fields']['dns_prefetch_domains']);
+        $perf_fields['dns_prefetch_domains'] = sanitize_textarea_field($input['perf_fields']['dns_prefetch_domains']);
+      }
+      
+      $sanitized['perf_fields'] = $perf_fields;
+    } else {
+      // If perf_fields is not submitted, make sure we don't lose it from existing options
+      $existing = get_option('lw_all_in_one', array());
+      if (isset($existing['perf_fields'])) {
+        $sanitized['perf_fields'] = $existing['perf_fields'];
       }
     }
 
-    // Merge with existing options
-    $existing = get_option('lw_all_in_one', array());
-    return array_merge($existing, $sanitized);
+    return $sanitized;
   }
 
   /**

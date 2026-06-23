@@ -2,7 +2,7 @@
 Contributors: sajdoko
 Tags: localweb, local web, chat, wim, web instant messenger
 Requires at least: 4.8.5
-Tested up to: 6.8
+Tested up to: 7.0
 Requires PHP: 5.6
 Stable tag: trunk
 License: GPLv2 or later
@@ -41,9 +41,13 @@ For more information, updates, and support, please visit [LocalWeb's official we
 
 == Changelog ==
 
+= 1.10.3 =
+
+* Fix: Fixed the options saving bug on update. 
+
 = 1.10.2 =
 
-* UX: Added an admin bar toggle to easily hide/show third-party admin notices to reduce dashboard clutter.
+* UX: Cleaned up the admin dashboard by using PHP to natively block third-party plugin notices from rendering, while safely preserving WordPress core and plugin update banners.
 
 = 1.10.1 =
 
