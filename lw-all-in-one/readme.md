@@ -41,6 +41,10 @@ For more information, updates, and support, please visit [LocalWeb's official we
 
 == Changelog ==
 
+= 1.10.4 =
+
+* Update: Updated contact and privacy policy addresses to reflect new location
+
 = 1.10.3 =
 
 * Fix: Fixed the options saving bug on update. 
