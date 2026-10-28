@@ -56,17 +56,17 @@ class Lw_All_In_One_Privacy_Policy_Pages {
   }
 
   public function lw_all_in_one_remove_italy_cookie_choices() {
-    if (is_plugin_active('italy-cookie-choices/italy-cookie-choices.php')) {
-      deactivate_plugins('italy-cookie-choices/italy-cookie-choices.php');
-    } elseif (is_plugin_inactive('italy-cookie-choices/italy-cookie-choices.php')) {
-      delete_plugins(array('italy-cookie-choices/italy-cookie-choices.php'));
-    }
+    // Retained for backwards compatibility; use the explicit migration action.
   }
 
   public function lw_all_in_one_create_privacy_pages() {
     if (!current_user_can('manage_options')) {
-      return;
+      wp_send_json_error(__('Permission denied.', 'lw-all-in-one'), 403);
     }
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+      wp_send_json_error(__('POST required.', 'lw-all-in-one'), 405);
+    }
+    check_ajax_referer($this->plugin_name, 'security');
 
     if (isset($_GET['lwaio_create_pages']) && $_GET['lwaio_create_pages'] == 1) {
       wp_send_json_error(__('Security is not valid!', 'lw-all-in-one'));
@@ -77,9 +77,18 @@ class Lw_All_In_One_Privacy_Policy_Pages {
       $create_cookie_page = isset($_POST[ $this->plugin_name . '_cookie_page']) && $_POST[ $this->plugin_name . '_cookie_page'] == 'on';
       $create_privacy_page = isset($_POST[ $this->plugin_name . '_privacy_page']) && $_POST[ $this->plugin_name . '_privacy_page'] == 'on';
       $create_info_dati_page = isset($_POST[ $this->plugin_name . '_trattamento_dati_page']) && $_POST[ $this->plugin_name . '_trattamento_dati_page'] == 'on';
+      if (!current_user_can('publish_pages')) {
+        wp_send_json_error(__('Permission denied.', 'lw-all-in-one'), 403);
+      }
+      foreach (array('cookie-policy', 'las-cookies-que-utilizamos', 'informativa-sul-trattamento-dei-dati-personali', 'informacion-sobre-el-tratamiento-de-datos-personales', 'informativa-trattamento-dati', 'informacion-sobre-el-tratamiento-de-datos') as $slug) {
+        $existing_page = get_page_by_path($slug);
+        if ($existing_page && !current_user_can('edit_post', $existing_page->ID)) {
+          wp_send_json_error(__('Permission denied.', 'lw-all-in-one'), 403);
+        }
+      }
 
       $date = gmdate('d-m-Y', time());
-      $domain = get_option('siteurl', $_SERVER['HTTP_HOST']);
+      $domain = home_url('/');
       $site_lang = get_locale();
       $create_pages_resposes = array();
       $created_pages_save_option = array();

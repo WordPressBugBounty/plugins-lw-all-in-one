@@ -418,120 +418,107 @@ class Lw_All_In_One_Performance {
    * @param    string    $url    Image URL.
    * @return   bool              Whether image is local.
    */
+  private $conversions = 0;
+
   private function is_local_image($url) {
-    $site_url = site_url();
-    $upload_url = wp_upload_dir()['baseurl'];
-
-    return (strpos($url, $site_url) === 0 || strpos($url, $upload_url) === 0);
+    return $this->url_to_path($url) !== false;
   }
 
-  /**
-   * Get WebP URL for an image.
-   *
-   * @access   private
-   * @param    string    $image_url    Original image URL.
-   * @return   string|false           WebP URL or false.
-   */
   private function get_webp_url($image_url) {
-    // Get the file path
-    $image_path = $this->url_to_path($image_url);
-    if (!$image_path || !file_exists($image_path)) {
+    $source = $this->url_to_path($image_url);
+    if (!$source) {
       return false;
     }
-
-    // Get file info
-    $path_info = pathinfo($image_path);
-    $extension = strtolower($path_info['extension']);
-
-    // Skip non-image files
-    if (!in_array($extension, array('jpg', 'jpeg', 'png', 'gif'))) {
+    $extension = strtolower(pathinfo($source, PATHINFO_EXTENSION));
+    if (!in_array($extension, array('jpg', 'jpeg', 'png', 'gif'), true)) {
       return false;
     }
-
-    // Generate WebP filename
-    $webp_filename = $path_info['filename'] . '.webp';
-    $webp_path = $this->webp_cache_dir . $webp_filename;
-
-    // Create WebP if it doesn't exist
-    if (!file_exists($webp_path)) {
-      $this->create_webp($image_path, $webp_path, $extension);
+    $quality = max(50, min(100, (int) ($this->options['perf_fields']['webp_quality'] ?? 85)));
+    $filename = 'v2-' . hash('sha256', $source . ':' . filemtime($source) . ':' . filesize($source) . ':' . $quality) . '.webp';
+    $target = $this->webp_cache_dir . $filename;
+    if (!is_file($target)) {
+      if ($this->conversions >= 3) {
+        return false;
+      }
+      $this->conversions++;
+      if (!$this->create_webp($source, $target)) {
+        return false;
+      }
     }
-
-    // Return WebP URL
-    if (file_exists($webp_path)) {
-      $upload_url = wp_upload_dir()['baseurl'];
-      return $upload_url . '/lw-aio-webp-cache/' . $webp_filename;
-    }
-
-    return false;
+    return wp_upload_dir()['baseurl'] . '/lw-aio-webp-cache/' . $filename;
   }
 
-  /**
-   * Convert URL to file path.
-   *
-   * @access   private
-   * @param    string    $url    URL.
-   * @return   string|false       File path or false.
-   */
+  /** Map only exact-origin public uploads, then enforce canonical containment. */
   private function url_to_path($url) {
-    // Remove query string
-    $url = strtok($url, '?');
-
-    // Get upload directory
-    $upload_dir = wp_upload_dir();
-
-    // Check if it's in uploads directory
-    if (strpos($url, $upload_dir['baseurl']) === 0) {
-      $relative_path = substr($url, strlen($upload_dir['baseurl']));
-      return $upload_dir['basedir'] . $relative_path;
-    }
-
-    // Check if it's in wp-content
-    $wp_content_url = content_url();
-    if (strpos($url, $wp_content_url) === 0) {
-      $relative_path = substr($url, strlen($wp_content_url));
-      return WP_CONTENT_DIR . $relative_path;
-    }
-
-    // Try to get attachment ID and get path
-    $attachment_id = attachment_url_to_postid($url);
-    if ($attachment_id) {
-      return get_attached_file($attachment_id);
-    }
-
-    return false;
-  }
-
-  /**
-   * Create WebP image.
-   *
-   * @access   private
-   * @param    string    $source_path    Source image path.
-   * @param    string    $webp_path      WebP output path.
-   * @param    string    $extension      Source file extension.
-   * @return   bool                     Success status.
-   */
-  private function create_webp($source_path, $webp_path, $extension) {
-    if (!function_exists('imagecreatefromstring') || !function_exists('imagewebp')) {
+    if (!is_string($url) || strlen($url) > 4096) {
       return false;
     }
+    $uploads = wp_upload_dir();
+    $base = wp_parse_url($uploads['baseurl']);
+    $parts = wp_parse_url($url);
+    if (!$parts || isset($parts['user']) || isset($parts['pass'])) {
+      return false;
+    }
+    foreach (array('scheme', 'host') as $part) {
+      if (strtolower($parts[$part] ?? '') !== strtolower($base[$part] ?? '')) {
+        return false;
+      }
+    }
+    $port = $parts['port'] ?? (($parts['scheme'] ?? '') === 'https' ? 443 : 80);
+    $base_port = $base['port'] ?? (($base['scheme'] ?? '') === 'https' ? 443 : 80);
+    $path = rawurldecode($parts['path'] ?? '');
+    $base_path = rtrim(rawurldecode($base['path'] ?? ''), '/') . '/';
+    if ($port !== $base_port || strpos($path, $base_path) !== 0 || strpos($path, "\0") !== false || strpos($path, '\\') !== false || in_array('..', explode('/', $path), true)) {
+      return false;
+    }
+    $root = realpath($uploads['basedir']);
+    $source = realpath($uploads['basedir'] . '/' . substr($path, strlen($base_path)));
+    if (!$root || !$source || !is_file($source) || !is_readable($source)) {
+      return false;
+    }
+    $root = trailingslashit(wp_normalize_path($root));
+    $normal = wp_normalize_path($source);
+    if (DIRECTORY_SEPARATOR === '\\') {
+      $root = strtolower($root);
+      $normal = strtolower($normal);
+    }
+    return strpos($normal, $root) === 0 ? $source : false;
+  }
 
-    // Get image
-    $image = imagecreatefromstring(file_get_contents($source_path));
+  private function create_webp($source_path, $webp_path) {
+    if (!function_exists('imagecreatefromstring') || !function_exists('imagewebp') || filesize($source_path) > 10 * MB_IN_BYTES) {
+      return false;
+    }
+    $info = @getimagesize($source_path);
+    if (!$info || !in_array($info[2], array(IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF), true) || $info[0] < 1 || $info[1] < 1 || $info[0] * $info[1] > 10000000) {
+      return false;
+    }
+    $memory_limit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
+    if ($memory_limit > 0 && memory_get_usage(true) + $info[0] * $info[1] * 8 + filesize($source_path) > $memory_limit * 0.8) {
+      return false;
+    }
+    $image = @imagecreatefromstring(file_get_contents($source_path));
     if (!$image) {
       return false;
     }
-
-    // Create WebP
-    $quality = 85; // Default quality
-    if (isset($this->options['perf_fields']['webp_quality'])) {
-      $quality = intval($this->options['perf_fields']['webp_quality']);
+    $temporary = tempnam($this->webp_cache_dir, 'lw-webp-');
+    if (!$temporary) {
+      imagedestroy($image);
+      return false;
     }
-
-    $result = imagewebp($image, $webp_path, $quality);
-    imagedestroy($image);
-
-    return $result;
+    try {
+      $quality = max(50, min(100, (int) ($this->options['perf_fields']['webp_quality'] ?? 85)));
+      if (!imagewebp($image, $temporary, $quality)) {
+        return false;
+      }
+      // Another renderer may have published the same immutable cache key.
+      return is_file($webp_path) || @rename($temporary, $webp_path) || is_file($webp_path);
+    } finally {
+      imagedestroy($image);
+      if (is_file($temporary)) {
+        unlink($temporary);
+      }
+    }
   }
 
   /**
@@ -573,7 +560,7 @@ class Lw_All_In_One_Performance {
 
     if (file_exists($critical_css_file)) {
       echo '<style id="lw-critical-css" data-critical="true">';
-      echo file_get_contents($critical_css_file); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+      echo str_ireplace('</style', '<\\/style', file_get_contents($critical_css_file)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
       echo '</style>';
     }
   }

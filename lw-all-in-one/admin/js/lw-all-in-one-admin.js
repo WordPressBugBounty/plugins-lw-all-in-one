@@ -28,9 +28,9 @@
 						var createdPages = response.data;
 						$.each(createdPages, function (index, value) {
 							if (value.status === 'success') {
-								$('#created_pages_response').append('<div class="notice notice-success inline"><p>' + value.message + '</p></div>');
+								$('#created_pages_response').append('<div class="notice notice-success inline"><p>' + $('<span>').text(value.message).html() + '</p></div>');
 							} else {
-								$('#created_pages_response').append('<div class="notice notice-error inline"><p>' + value.message + '</p></div>');
+								$('#created_pages_response').append('<div class="notice notice-error inline"><p>' + $('<span>').text(value.message).html() + '</p></div>');
 							}
 						});
 					} else {
@@ -54,7 +54,7 @@
 				})
 				.done(function (response) {
 					if (response.success === true) {
-						$('#verification_status_response').append('<div class="notice notice-success inline"><p>' + response.data['message'] + '</p></div>');
+						$('#verification_status_response').append('<div class="notice notice-success inline"><p>' + $('<span>').text(response.data['message']).html() + '</p></div>');
 						$('#wim_fields_verification_status_resp').val('verified');
 						$('#wim_fields_token_resp').val(response.data.fields['token']);
 						$('#wim_fields_auto_show_wim').val(response.data.fields['auto_show_wim']);
@@ -68,7 +68,7 @@
 							3000
 						);
 					} else {
-						$('#verification_status_response').append('<div class="notice notice-error inline"><p>' + response.data + '</p></div>');
+						$('#verification_status_response').append('<div class="notice notice-error inline"><p>' + $('<span>').text(response.data).html() + '</p></div>');
 					}
 				});
 		});

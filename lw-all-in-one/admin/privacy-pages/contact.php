@@ -6,7 +6,7 @@ $replacements = array();
 $replacements[0] = $date;
 $contact_file = wp_filter_post_kses(preg_replace($patterns, $replacements, $contact_file));
 
-if ($page_contact->ID != '') {
+if ($page_contact && $page_contact->ID) {
   $contact_page = array(
     'ID' => $page_contact->ID,
     'post_content' => $contact_file,

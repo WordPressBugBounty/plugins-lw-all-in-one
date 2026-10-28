@@ -7,7 +7,7 @@ $replacements[0] = $domain;
 $replacements[1] = $date;
 $policy_file = wp_filter_post_kses(preg_replace($patterns, $replacements, $policy_file));
 
-if ($page_policy->ID != '') {
+if ($page_policy && $page_policy->ID) {
   $policy_page = array(
     'ID' => $page_policy->ID,
     'post_content' => $policy_file,

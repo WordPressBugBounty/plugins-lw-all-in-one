@@ -56,29 +56,7 @@ class Lw_All_In_One_Ga_Events {
   }
 
   public function lw_all_in_one_gadwp_is_active_deactivate() {
-    if (is_plugin_active('google-analytics-dashboard-for-wp/gadwp.php')) {
-		  global $wpdb;
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup of third-party plugin data
-			$sqlquery = $wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE 'gadwp_cache_%%'" );
-			delete_option( 'gadwp_options' );
-			delete_option( 'gadwp_redeemed_code' );
-			delete_option( 'exactmetrics_tracking_notice');
-			delete_option( 'exactmetrics_usage_tracking_last_checkin');
-			delete_option( 'exactmetrics_usage_tracking_config');
-      wp_clear_scheduled_hook( 'exactmetrics_usage_tracking_cron' );
-      deactivate_plugins('google-analytics-dashboard-for-wp/gadwp.php');
-    } elseif (is_plugin_inactive('google-analytics-dashboard-for-wp/gadwp.php')) {
-		  global $wpdb;
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup of third-party plugin data
-			$sqlquery = $wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE 'gadwp_cache_%%'" );
-			delete_option( 'gadwp_options' );
-			delete_option( 'gadwp_redeemed_code' );
-			delete_option( 'exactmetrics_tracking_notice');
-			delete_option( 'exactmetrics_usage_tracking_last_checkin');
-			delete_option( 'exactmetrics_usage_tracking_config');
-      wp_clear_scheduled_hook( 'exactmetrics_usage_tracking_cron' );
-      delete_plugins(array('google-analytics-dashboard-for-wp/gadwp.php'));
-    }
+    // Compatibility no-op. Legacy migration requires an explicit authorized POST.
   }
 
   /**

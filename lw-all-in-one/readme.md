@@ -3,22 +3,22 @@ Contributors: sajdoko
 Tags: localweb, local web, chat, wim, web instant messenger
 Requires at least: 4.8.5
 Tested up to: 7.0
-Requires PHP: 5.6
+Requires PHP: 7.4
 Stable tag: trunk
 License: GPLv2 or later
 License URI: <https://www.gnu.org/licenses/gpl-2.0.html>
 
-LocalWeb All In One integrates services such as Web Instant Messenger, Google Analytics, and a GDPR-compliant Cookie Banner into your website.
+LocalWeb All In One integrates services such as Web Instant Messenger, Google Analytics, and a consent-based cookie banner into your website.
 
 == Description ==
-**LocalWeb All In One** is a versatile WordPress plugin developed exclusively for Local Web S.R.L clients. It integrates essential services such as Web Instant Messenger, Google Analytics, Contact Form 7, and a GDPR-compliant Cookie Banner, enhancing website engagement and performance.
+**LocalWeb All In One** is a versatile WordPress plugin developed exclusively for Local Web S.R.L clients. It integrates essential services such as Web Instant Messenger, Google Analytics, Contact Form 7, and a consent-based cookie banner, enhancing website engagement and performance.
 
 Key Features:
 
-* **Cookie Banner Integration:** Integrates cookie banner consent functionality to ensure your website complies with GDPR requirements.
+* **Cookie Banner Integration:** Integrates cookie banner consent functionality to manage optional cookies through explicit visitor choices.
 * **Web Instant Messenger Integration:** Embeds the [Web Instant Messenger](https://www.webinstantmessenger.it/) script into your website, activating a chat window for enhanced user interaction . All chat interactions and information entered into the chat window are transmitted to LocalWeb's server.
 * **Google Analytics Integration:** Facilitates integration with both Google Analytics 4 (GA4) and Google Tag Manager (GTM) for advanced tracking capabilities.
-* **Contact Form 7 Integration:** Provides customization options for Contact Form 7 to optimize script and style usage based on your website’s needs.
+* **Contact Form 7 Integration:** Provides customization options for Contact Form 7 to optimize script and style usage based on your websiteâ€™s needs.
 
 > :warning: **Note:** This plugin is intended exclusively for [LocalWeb](https://localweb.it/ "Web Marketing Agency") clients and leverages services provided by LocalWeb.
 
@@ -40,6 +40,19 @@ For more information, updates, and support, please visit [LocalWeb's official we
 5. Plugin options page.
 
 == Changelog ==
+
+= 1.10.6 =
+* Security: require authorized requests for legacy cleanup and privacy-page changes; protect executable settings across all forms.
+* Security: SSO adds durable atomic one-time token replay prevention, cryptographic domain binding, administrator permission enforcement, and optional account-mapping configuration.
+* Security: confine image conversion to canonical public uploads, bound decoding, and use distinct versioned cache keys.
+* Harden analytics ingestion, database pagination, output escaping, remote responses, notices and lifecycle cleanup.
+* Require PHP 7.4 or later; earlier advertised PHP versions were incompatible with existing plugin syntax.
+
+= 1.10.5 =
+* Preserve undelivered CF7 enquiries during retention; configure the delivered-row retention window.
+* Add durable retry state, bounded exponential retries, endpoint cooldown and bounded batch delivery.
+* Display delivery failures and hold the old backlog until API acceptance is confirmed.
+* Guard the CF7 dequeue path when the global post is absent.
 
 = 1.10.4 =
 

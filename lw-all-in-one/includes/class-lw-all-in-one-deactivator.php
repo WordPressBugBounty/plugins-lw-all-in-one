@@ -25,6 +25,8 @@ class Lw_All_In_One_Deactivator {
    *
    */
   public static function deactivate() {
+    wp_clear_scheduled_hook('lw_all_in_one_security_cleanup');
+    wp_clear_scheduled_hook('lw_all_in_one_single_event');
 
     if (wp_next_scheduled('lw_all_in_one_data_retention')) {
       wp_clear_scheduled_hook( 'lw_all_in_one_data_retention' );

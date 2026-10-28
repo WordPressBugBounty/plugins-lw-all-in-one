@@ -58,11 +58,12 @@ class Lw_All_In_One_Wim {
       die();
     }
     if (isset($_POST['action']) && $_POST['action'] === "lw_all_in_one_verify_wim_attivation") {
-      $domain = clean_domain(get_option('siteurl', $_SERVER['HTTP_HOST']));
+      $domain = clean_domain(home_url('/'));
       $response = wp_remote_get($this->wim_veify_api_url, array(
         'method' => 'GET',
-        'timeout' => 45,
-        'redirection' => 5,
+        'timeout' => 10,
+        'redirection' => 0,
+        'limit_response_size' => 16384,
         'httpversion' => '1.0',
         'blocking' => true,
         'headers' => array(),
@@ -72,12 +73,12 @@ class Lw_All_In_One_Wim {
       );
       $ret_body = wp_remote_retrieve_body($response);
       $data = recursive_sanitize_array_object(json_decode($ret_body));
-      if (is_wp_error($response)) {
-        $error_message = $response->get_error_message();
+      if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200 || !is_object($data) || !isset($data->response) || !is_string($data->response)) {
+
         wp_send_json_error(__('Something went wrong!', 'lw-all-in-one'));
         die();
-      } elseif ($data->response == 'verified') {
-        if ($data->token == '') {
+      } elseif ($data->response === 'verified') {
+        if (!isset($data->token) || !is_string($data->token) || $data->token === '') {
           wp_send_json_error(__('WIM authorized but token returned was empty!', 'lw-all-in-one'));
           die();
         } else if (strlen($data->token) == 32) {
@@ -87,8 +88,8 @@ class Lw_All_In_One_Wim {
           wp_send_json_error(__('There was an unknown error!', 'lw-all-in-one'));
           die();
         }
-      } elseif ($data->response == 'unverified') {
-        wp_send_json_error($data->message);
+      } elseif ($data->response === 'unverified') {
+        wp_send_json_error(isset($data->message) && is_string($data->message) ? sanitize_text_field($data->message) : __('Verification failed.', 'lw-all-in-one'));
         die();
       } else {
         wp_send_json_error(__('Not a valid response!', 'lw-all-in-one'));
@@ -100,16 +101,8 @@ class Lw_All_In_One_Wim {
     }
   }
 
-  public function lw_all_in_one_old_wim_is_active_deactivate(){
-    if (is_plugin_active('web-instant-messenger/web-instant-messenger.php')) {
-      delete_option('wim_activation_status');
-      delete_option('web-instant-messenger');
-      deactivate_plugins('web-instant-messenger/web-instant-messenger.php');
-    } elseif (is_plugin_inactive('web-instant-messenger/web-instant-messenger.php')) {
-      delete_option('wim_activation_status');
-      delete_option('web-instant-messenger');
-      delete_plugins(array('web-instant-messenger/web-instant-messenger.php'));
-    }
+  public function lw_all_in_one_old_wim_is_active_deactivate() {
+    // Compatibility no-op. Legacy migration requires an explicit authorized POST.
   }
 
 }

@@ -92,141 +92,166 @@ PEM;
       if (function_exists('nocache_headers')) {
         nocache_headers();
       }
-
-      wp_send_json_success([
-        'active' => true,
-        'plugin' => 'lw-all-in-one',
-        'sso' => 'assegna',
+      $sso_enabled = !defined('LW_ALL_IN_ONE_SSO_ENABLED') || (bool) LW_ALL_IN_ONE_SSO_ENABLED;
+      wp_send_json_success(array(
+        'active'  => $sso_enabled,
+        'plugin'  => 'lw-all-in-one',
+        'sso'     => 'assegna',
         'version' => (string) $this->version,
-      ]);
+      ));
     }
 
     if (!isset($_GET['assegna_sso'])) {
       return;
     }
 
-    $token = isset($_GET['token']) ? sanitize_text_field(wp_unslash($_GET['token'])) : '';
-    if ($token === '') {
-      wp_die(__('SSO token is missing.', 'lw-all-in-one'));
+    if (defined('LW_ALL_IN_ONE_SSO_ENABLED') && !LW_ALL_IN_ONE_SSO_ENABLED) {
+      wp_die(esc_html__('SSO is disabled on this site.', 'lw-all-in-one'), '', array('response' => 403));
     }
 
-    if (!function_exists('openssl_verify') || !function_exists('openssl_pkey_get_public')) {
-      wp_die(__('SSO not available. OpenSSL PHP extension is required.', 'lw-all-in-one'));
+    if (function_exists('nocache_headers')) {
+      nocache_headers();
+    }
+    if (!headers_sent()) {
+      header('Referrer-Policy: no-referrer');
     }
 
-    $base64UrlDecode = function ($data) {
-      if (!is_string($data) || $data === '') {
-        return null;
-      }
-      $data = strtr($data, '-_', '+/');
-      $pad = strlen($data) % 4;
-      if ($pad) {
-        $data .= str_repeat('=', 4 - $pad);
-      }
-      $decoded = base64_decode($data, true);
-      return $decoded === false ? null : $decoded;
-    };
-
-    // Public key is embedded in the plugin. Allow override via constant if needed.
-    $publicKey = self::ASSEGNA_SSO_PUBLIC_KEY_PEM;
-    if (defined('LW_ALL_IN_ONE_SSO_PUBLIC_KEY') && (string) LW_ALL_IN_ONE_SSO_PUBLIC_KEY !== '') {
-      $publicKey = (string) LW_ALL_IN_ONE_SSO_PUBLIC_KEY;
-    }
-
-    if (!is_string($publicKey) || trim($publicKey) === '') {
-      wp_die(__('SSO not configured. Missing public key in plugin.', 'lw-all-in-one'));
+    $token = isset($_GET['token']) ? wp_unslash($_GET['token']) : '';
+    if (!is_string($token) || strlen($token) === 0 || strlen($token) > 8192 || !function_exists('openssl_verify')) {
+      wp_die(esc_html__('Invalid SSO token.', 'lw-all-in-one'), '', array('response' => 403));
     }
 
     $parts = explode('.', $token, 2);
     if (count($parts) !== 2) {
-      wp_die(__('Invalid SSO token format.', 'lw-all-in-one'));
+      wp_die(esc_html__('Invalid SSO token.', 'lw-all-in-one'), '', array('response' => 403));
     }
 
-    $payloadJson = $base64UrlDecode($parts[0]);
-    $signature = $base64UrlDecode($parts[1]);
-    if ($payloadJson === null || $signature === null) {
-      wp_die(__('Invalid SSO token encoding.', 'lw-all-in-one'));
+    $decode = function ($value) {
+      if (!is_string($value) || !preg_match('/^[a-zA-Z0-9_-]+$/D', $value)) {
+        return false;
+      }
+      $value = strtr($value, '-_', '+/');
+      $pad = strlen($value) % 4;
+      if ($pad) {
+        $value .= str_repeat('=', 4 - $pad);
+      }
+      return base64_decode($value, true);
+    };
+
+    $json = $decode($parts[0]);
+    $signature = $decode($parts[1]);
+
+    $key = defined('LW_ALL_IN_ONE_SSO_PUBLIC_KEY') && is_string(LW_ALL_IN_ONE_SSO_PUBLIC_KEY) && trim(LW_ALL_IN_ONE_SSO_PUBLIC_KEY) !== ''
+      ? LW_ALL_IN_ONE_SSO_PUBLIC_KEY
+      : self::ASSEGNA_SSO_PUBLIC_KEY_PEM;
+
+    $public_key = is_string($key) ? openssl_pkey_get_public($key) : false;
+    if ($json === false || $signature === false || !$public_key || openssl_verify($json, $signature, $public_key, OPENSSL_ALGO_SHA256) !== 1) {
+      wp_die(esc_html__('Invalid SSO signature.', 'lw-all-in-one'), '', array('response' => 403));
     }
 
-    $pub = openssl_pkey_get_public($publicKey);
-    if (!$pub) {
-      wp_die(__('SSO public key is invalid.', 'lw-all-in-one'));
+    $payload = json_decode($json, true, 8);
+    if (!is_array($payload) || !is_string($payload['u'] ?? null) || !isset($payload['ts']) || !is_numeric($payload['ts']) || !is_string($payload['nonce'] ?? null)) {
+      wp_die(esc_html__('Invalid SSO claims.', 'lw-all-in-one'), '', array('response' => 403));
     }
 
-    $ok = openssl_verify($payloadJson, $signature, $pub, OPENSSL_ALGO_SHA256);
-    if ($ok !== 1) {
-      wp_die(__('SSO token signature verification failed.', 'lw-all-in-one'));
+    $ts = (int) $payload['ts'];
+    $now = time();
+    $nonce = (string) $payload['nonce'];
+
+    // TTL check: accept tokens within 90 seconds (past or future clock skew)
+    if ($ts < $now - 90 || $ts > $now + 90 || strlen($nonce) < 16 || strlen($nonce) > 128 || strlen($payload['u']) > 150) {
+      wp_die(esc_html__('SSO token is expired or claims are invalid.', 'lw-all-in-one'), '', array('response' => 403));
     }
 
-    $payload = json_decode($payloadJson, true);
-    if (!is_array($payload)) {
-      wp_die(__('Invalid SSO payload.', 'lw-all-in-one'));
+    // Domain binding: verify token domain matches current site
+    $site_host = parse_url(home_url(), PHP_URL_HOST);
+    $site_host = is_string($site_host) ? strtolower($site_host) : '';
+    $site_host = preg_replace('/^www\./i', '', $site_host);
+    $site_host = preg_replace('/:\d+$/', '', $site_host);
+
+    $site_url_host = parse_url(site_url(), PHP_URL_HOST);
+    $site_url_host = is_string($site_url_host) ? strtolower($site_url_host) : '';
+    $site_url_host = preg_replace('/^www\./i', '', $site_url_host);
+    $site_url_host = preg_replace('/:\d+$/', '', $site_url_host);
+
+    if (isset($payload['domain'])) {
+      $payload_domain = strtolower(trim((string) $payload['domain']));
+      $payload_domain = preg_replace('/^www\./i', '', $payload_domain);
+      $payload_domain = preg_replace('/:\d+$/', '', $payload_domain);
+
+      if ($payload_domain === '' || ($payload_domain !== $site_host && $payload_domain !== $site_url_host)) {
+        wp_die(esc_html__('SSO token domain mismatch.', 'lw-all-in-one'), '', array('response' => 403));
+      }
+    } elseif (!isset($payload['aud'])) {
+      wp_die(esc_html__('SSO token domain is missing.', 'lw-all-in-one'), '', array('response' => 403));
     }
 
-    $u = isset($payload['u']) ? sanitize_text_field((string) $payload['u']) : '';
-    $ts = isset($payload['ts']) ? (int) $payload['ts'] : 0;
-    $nonce = isset($payload['nonce']) ? sanitize_text_field((string) $payload['nonce']) : '';
-    $redirect = isset($payload['redirect']) ? (string) $payload['redirect'] : '/wp-admin/';
-
-    if ($u === '' || $ts <= 0 || $nonce === '') {
-      wp_die(__('Missing SSO payload fields.', 'lw-all-in-one'));
+    // If audience claim is present, verify exact target installation
+    if (!empty($payload['aud']) && is_string($payload['aud'])) {
+      $expected_home = untrailingslashit(home_url('/'));
+      $expected_site = untrailingslashit(site_url('/'));
+      if ($payload['aud'] !== $expected_home && $payload['aud'] !== $expected_site) {
+        wp_die(esc_html__('SSO token audience mismatch.', 'lw-all-in-one'), '', array('response' => 403));
+      }
     }
 
-    // TTL: 90 seconds
-    if (abs(time() - $ts) > 90) {
-      wp_die(__('SSO token has expired.', 'lw-all-in-one'));
+    // User resolution:
+    // 1. If explicit user mapping is configured via constant, require approved mapping
+    $user = false;
+    $raw_u = sanitize_text_field((string) $payload['u']);
+    if (defined('LW_ALL_IN_ONE_SSO_USERS') && is_array(LW_ALL_IN_ONE_SSO_USERS)) {
+      if (isset(LW_ALL_IN_ONE_SSO_USERS[$raw_u])) {
+        $login = (string) LW_ALL_IN_ONE_SSO_USERS[$raw_u];
+        $user = get_user_by('login', $login);
+        if (!$user && is_email($login)) {
+          $user = get_user_by('email', $login);
+        }
+      }
+    } else {
+      // 2. Default Assegna behavior:
+      // Try username lookup
+      $user = get_user_by('login', $raw_u);
+      // Try email lookup
+      if (!$user && is_email($raw_u)) {
+        $user = get_user_by('email', $raw_u);
+      }
+      // Fallback to first administrator (Assegna might send a user that doesn't exist on the target WP)
+      if (!$user) {
+        $admins = get_users(array(
+          'role'    => 'administrator',
+          'number'  => 1,
+          'orderby' => 'ID',
+          'order'   => 'ASC',
+          'fields'  => 'all',
+        ));
+        $user = !empty($admins) ? $admins[0] : null;
+      }
     }
 
-    // Domain binding (payload domain must match current site)
-    $siteHost = parse_url(home_url(), PHP_URL_HOST);
-    $siteHost = is_string($siteHost) ? strtolower($siteHost) : '';
-    $siteHost = preg_replace('/:\\d+$/', '', $siteHost);
-    $siteHost = preg_replace('/^www\\./i', '', $siteHost);
-    $payloadDomain = isset($payload['domain']) ? strtolower((string) $payload['domain']) : '';
-    $payloadDomain = preg_replace('/^www\\./i', '', $payloadDomain);
-    if ($payloadDomain === '' || $payloadDomain !== $siteHost) {
-      wp_die(__('SSO token domain mismatch.', 'lw-all-in-one'));
+    // Ensure the resolved user is a valid, active administrator with manage_options
+    if (!$user || !in_array('administrator', (array) $user->roles, true) || !user_can($user, 'manage_options') || !empty($user->spam) || !empty($user->deleted) || (int) $user->user_status !== 0) {
+      wp_die(esc_html__('SSO identity is not approved for this site.', 'lw-all-in-one'), '', array('response' => 403));
     }
 
-    // One-time use nonce
-    $nonceKey = 'lwaio_sso_' . md5($nonce);
-    if (get_transient($nonceKey)) {
-      wp_die(__('SSO token nonce has already been used.', 'lw-all-in-one'));
-    }
-    set_transient($nonceKey, 1, 2 * MINUTE_IN_SECONDS);
-
-    $user = get_user_by('login', $u);
-    if (!$user) {
-      // fallback to first administrator (Assegna might send a user that doesn't exist on the target WP)
-      $admins = get_users([
-        'role' => 'administrator',
-        'number' => 1,
-        'orderby' => 'ID',
-        'order' => 'ASC',
-        'fields' => 'all',
-      ]);
-      $user = !empty($admins) ? $admins[0] : null;
+    // Replay protection: consume nonce atomically
+    if (!Lw_All_In_One_Security::consume_sso($nonce, $ts + 120)) {
+      wp_die(esc_html__('SSO token is already used or cannot be recorded safely.', 'lw-all-in-one'), '', array('response' => 403));
     }
 
-    if (!$user) {
-      wp_die(__('SSO user not found.', 'lw-all-in-one'));
-    }
-
-    if (!in_array('administrator', (array) $user->roles, true)) {
-      wp_die(__('SSO user is not an administrator.', 'lw-all-in-one'));
-    }
-
+    // Establish authenticated session
     wp_set_current_user($user->ID);
-    wp_set_auth_cookie($user->ID, true);
+    wp_set_auth_cookie($user->ID, true, is_ssl());
     do_action('wp_login', $user->user_login, $user);
+    do_action('lw_all_in_one_sso_authenticated', $user->ID, hash('sha256', $raw_u));
 
-    // Redirect to wp-admin by default, or to a safe local path.
-    $target = $redirect;
-    if (!is_string($target) || $target === '' || $target[0] !== '/') {
-      $target = '/wp-admin/';
+    $redirect = $payload['redirect'] ?? '/wp-admin/';
+    if (!is_string($redirect) || substr($redirect, 0, 1) !== '/' || substr($redirect, 0, 2) === '//') {
+      $redirect = admin_url();
+    } elseif ($redirect === '/wp-admin' || $redirect === '/wp-admin/') {
+      $redirect = admin_url();
     }
-
-    wp_safe_redirect($target);
+    wp_safe_redirect($redirect);
     exit;
   }
 
@@ -251,6 +276,7 @@ PEM;
    */
   public function enqueue_scripts() {
     $min = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
+    wp_enqueue_script($this->plugin_name . '-tracking', plugin_dir_url(__FILE__) . 'js/lw-all-in-one-tracking' . $min . '.js', array(), $this->version, false);
     $ga_activate = (isset($this->options['ga_activate'])) ? $this->options['ga_activate'] : '';
     $ck_activate = (isset($this->options['ck_activate'])) ? $this->options['ck_activate'] : '';
     $ga_fields_tracking_id = (isset($this->options['ga_fields']['tracking_id'])) ? sanitize_text_field($this->options['ga_fields']['tracking_id']) : '';
@@ -495,8 +521,10 @@ PEM;
       ]);
     }
 
-    $preference_cookies = isset($_COOKIE['lwaio_consent_preferences']) ? json_decode(stripslashes(sanitize_text_field(wp_unslash($_COOKIE['lwaio_consent_preferences']))), true) : '';
-    $viewed_cookie = isset($_COOKIE['lwaio_consent_acted']) ? sanitize_text_field(wp_unslash($_COOKIE['lwaio_consent_acted'])) : '';
+    // Shared page caches must contain no visitor-specific selected purposes.
+    // The banner restores each checkbox from the current browser's cookie.
+    $preference_cookies = array();
+    $viewed_cookie = '';
     foreach ($categories_data as $category) {
       $total     = 0;
       $temp      = array();
@@ -524,10 +552,10 @@ PEM;
 ?>
     <script type="text/javascript">
       /* <![CDATA[ */
-      lwaios_list = '<?php echo str_replace("'", "\'", wp_json_encode($categories_json_data)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
-                      ?>';
-      lwaiobar_settings = '<?php echo wp_json_encode($this->lwaiobar_settings); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
-                            ?>';
+      lwaios_list = <?php echo wp_json_encode(wp_json_encode($categories_json_data), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                      ?>;
+      lwaiobar_settings = <?php echo wp_json_encode(wp_json_encode($this->lwaiobar_settings), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            ?>;
       /* ]]> */
     </script>
     <?php
@@ -547,7 +575,7 @@ PEM;
       'show_again_margin'               => '3',
       'auto_hide_delay'                 => '10000',
       'auto_scroll_offset'              => '10',
-      'cookie_expiry'                   => __('1 Year', 'lw-all-in-one'),
+      'cookie_expiry'                   => 365,
       'opacity'                         => '1',
       'animate_speed_hide'              => 0,
       'animate_speed_show'              => 0,
@@ -586,140 +614,25 @@ PEM;
   }
 
   public function lw_all_in_one_header_scripts() {
-    $ga_activate = (isset($this->options['ga_activate'])) ? $this->options['ga_activate'] : '';
-    $ga_fields_tracking_id = (isset($this->options['ga_fields']['tracking_id'])) ? sanitize_text_field($this->options['ga_fields']['tracking_id']) : '';
-    $ga_fields_save_ga_events = (isset($this->options['ga_fields']['save_ga_events'])) ? sanitize_text_field($this->options['ga_fields']['save_ga_events']) : '';
-    $ga_fields_monitor_email_link = (isset($this->options['ga_fields']['monitor_email_link'])) ? sanitize_text_field($this->options['ga_fields']['monitor_email_link']) : '';
-    $ga_fields_monitor_tel_link = (isset($this->options['ga_fields']['monitor_tel_link'])) ? sanitize_text_field($this->options['ga_fields']['monitor_tel_link']) : '';
-    $ga_fields_monitor_form_submit = (isset($this->options['ga_fields']['monitor_form_submit'])) ? sanitize_text_field($this->options['ga_fields']['monitor_form_submit']) : '';
-
-    $preference_cookies = isset($_COOKIE['lwaio_consent_preferences']) ? json_decode(stripslashes(sanitize_text_field(wp_unslash($_COOKIE['lwaio_consent_preferences']))), true) : '';
-    $ad_user_data = isset($preference_cookies['marketing']) && $preference_cookies['marketing'] == 'yes' ? 'granted' : 'granted';
-    $ad_personalization = isset($preference_cookies['marketing']) && $preference_cookies['marketing'] == 'yes' ? 'granted' : 'granted';
-    $analytics_storage = isset($preference_cookies['analytics']) && $preference_cookies['analytics'] == 'yes' ? 'granted' : 'granted';
-    $ad_storage = (($ad_user_data == 'granted') || ($ad_personalization == 'granted') || ($analytics_storage == 'granted')) ? 'granted' : 'granted';
-
-    if ($ga_activate === 'on' && $ga_fields_tracking_id !== '') {
-      $tag_type = explode('-', $ga_fields_tracking_id, 2)[0];
-    ?>
-      <script>
-        let ad_user_data = '<?php echo esc_js($ad_user_data); ?>';
-        let ad_personalization = '<?php echo esc_js($ad_personalization); ?>';
-        let analytics_storage = '<?php echo esc_js($analytics_storage); ?>';
-        let ad_storage = '<?php echo esc_js($ad_storage); ?>';
-        let isGtmTag = '<?php echo esc_js($tag_type); ?>' === 'GTM';
-        let gtmScriptSrc = "https://www.googletagmanager.com/gtm.js?id=<?php echo esc_js($ga_fields_tracking_id); ?>";
-
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-          dataLayer.push(arguments);
-        }
-        gtag('consent', 'default', {
-          'ad_user_data': ad_user_data,
-          'ad_personalization': ad_personalization,
-          'analytics_storage': analytics_storage,
-          'ad_storage': ad_storage,
-          'wait_for_update': 500,
-        });
-        if (isGtmTag) {
-          dataLayer.push({
-            'gtm.start': new Date().getTime(),
-            'event': 'gtm.js'
-          });
-        } else {
-          gtag('js', new Date());
-          gtag('config', '<?php echo esc_js($ga_fields_tracking_id); ?>');
-          gtmScriptSrc = "https://www.googletagmanager.com/gtag/js?id=<?php echo esc_js($ga_fields_tracking_id); ?>";
-        }
-
-        window.addEventListener("LwAioCookieConsentOnAcceptAll", function(e) {
-          gtag("consent", "update", {
-            ad_user_data: "granted",
-            ad_personalization: "granted",
-            ad_storage: "granted",
-            analytics_storage: "granted",
-          });
-          loadGtmScript(gtmScriptSrc);
-        });
-        window.addEventListener("LwAioCookieConsentOnAccept", function(e) {
-          ad_user_data = e.detail.lwaio_consent_preferences.marketing === "yes" ? 'granted' : 'denied';
-          ad_personalization = e.detail.lwaio_consent_preferences.marketing === "yes" ? 'granted' : 'denied';
-          analytics_storage = e.detail.lwaio_consent_preferences.analytics === "yes" ? 'granted' : 'denied';
-          ad_storage = (ad_user_data === 'granted' || ad_personalization === 'granted' || analytics_storage === 'granted') ? 'granted' : 'denied';
-          gtag("consent", "update", {
-            ad_user_data: ad_user_data,
-            ad_personalization: ad_personalization,
-            analytics_storage: analytics_storage,
-            ad_storage: ad_storage,
-          });
-          loadGtmScript(gtmScriptSrc);
-        });
-        window.addEventListener("LwAioCookieConsentOnReject", function(e) {
-          gtag("consent", "update", {
-            ad_user_data: "denied",
-            ad_personalization: "denied",
-            analytics_storage: "denied",
-            ad_storage: "denied",
-          });
-        });
-
-        if (ad_storage === 'granted') {
-          loadGtmScript(gtmScriptSrc);
-        }
-
-        function loadGtmScript(gtmScriptSrc) {
-          let gtmScript = document.createElement("script");
-          gtmScript.async = true;
-          gtmScript.src = gtmScriptSrc;
-          let firstScript = document.getElementsByTagName('script')[0];
-          firstScript.parentNode.insertBefore(gtmScript, firstScript);
-        }
-      </script>
-      <?php
-        echo '<script>';
-        echo 'const lwAioGaActivate=true;';
-        echo 'const lwAioTrackingType="' . esc_js($tag_type) . '";';
-        echo ($ga_fields_save_ga_events === 'on') ? 'const lwAioSaveGaEvents=true;' : 'const lwAioSaveGaEvents=false;';
-        echo ($ga_fields_monitor_email_link === 'on') ? 'const lwAioMonitorEmailLink=true;' : 'const lwAioMonitorEmailLink=false;';
-        echo ($ga_fields_monitor_tel_link === 'on') ? 'const lwAioMonitorTelLink=true;' : 'const lwAioMonitorTelLink=false;';
-        echo ($ga_fields_monitor_form_submit === 'on') ? 'const lwAioMonitorFormSubmit=true;' : 'const lwAioMonitorFormSubmit=false;';
-        echo '</script>', PHP_EOL;
+    $options = $this->options;
+    $config = array(
+      'analytics' => ($options['ga_activate'] ?? '') === 'on',
+      'trackingId' => sanitize_text_field($options['ga_fields']['tracking_id'] ?? ''),
+      'chat' => ($options['wim_activate'] ?? '') === 'on' && ($options['wim_fields']['verification_status'] ?? '') === 'verified' && !empty($options['wim_fields']['rag_soc']),
+    );
+    echo '<script>window.lwAioTracking=' . wp_json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';</script>';
+    echo '<script>';
+    echo 'const lwAioGaActivate=' . ($config['analytics'] ? 'true' : 'false') . ';';
+    echo 'const lwAioTrackingType=' . wp_json_encode(explode('-', $config['trackingId'], 2)[0], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT) . ';';
+    foreach (array('lwAioSaveGaEvents' => 'save_ga_events', 'lwAioMonitorEmailLink' => 'monitor_email_link', 'lwAioMonitorTelLink' => 'monitor_tel_link', 'lwAioMonitorFormSubmit' => 'monitor_form_submit') as $name => $option) {
+      echo 'const ' . esc_js($name) . '=' . (($options['ga_fields'][$option] ?? '') === 'on' ? 'true' : 'false') . ';';
     }
+    echo '</script>';
   }
 
   public function lw_all_in_one_footer_scripts() {
-
-    $wim_activate = (isset($this->options['wim_activate'])) ? sanitize_text_field($this->options['wim_activate']) : '';
-    $wim_fields_verification_status = (isset($this->options['wim_fields']['verification_status'])) ? sanitize_text_field($this->options['wim_fields']['verification_status']) : '';
-    $wim_fields_rag_soc = (isset($this->options['wim_fields']['rag_soc'])) ? sanitize_text_field($this->options['wim_fields']['rag_soc']) : '';
-
-    if ($wim_activate === 'on') {
-      if ($wim_fields_verification_status === 'verified' && $wim_fields_rag_soc !== '') {
-        echo '<script type="text/javascript">
-              (function(d){
-                var s = d.getElementsByTagName(\'script\'),f = s[s.length-1], p = d.createElement(\'script\');
-                window.WidgetId = "USC_WIDGET";
-                p.type = \'text/javascript\';
-                p.setAttribute(\'charset\',\'utf-8\');
-                p.async = 1;
-                p.id = "ultimate_support_chat";
-                p.src = "//www.localweb.it/chat/widget/ultimate_chat_widget.js";
-                f.parentNode.insertBefore(p, f);
-              }(document));
-            </script>';
-        echo '<p id="rag_soc" style="display:none">';
-        echo esc_js($wim_fields_rag_soc);
-        echo '</p>';
-      } elseif ($wim_fields_verification_status !== 'verified') {
-        echo '<script type="text/javascript">
-            console.log("' . esc_attr__('WIM not verified!', 'lw-all-in-one') . '");
-            </script>';
-      } elseif ($wim_fields_rag_soc === '') {
-        echo '<script type="text/javascript">
-            console.log("' . esc_attr__('Missing business name!', 'lw-all-in-one') . '");
-            </script>';
-      }
+    if (($this->options['wim_activate'] ?? '') === 'on') {
+      echo '<p id="rag_soc" hidden>' . esc_html($this->options['wim_fields']['rag_soc'] ?? '') . '</p>';
     }
   }
 
@@ -729,19 +642,24 @@ PEM;
       die();
     }
 
-    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : 'unknown';
-    $rate_key = 'lwaio_ga_rate_' . md5($ip);
-    $count = (int) get_transient($rate_key);
-    if ($count >= 10) {
-      wp_send_json_error(__('Rate limit exceeded.', 'lw-all-in-one'));
-      die();
+    $options = get_option($this->plugin_name, array());
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || ($options['ga_activate'] ?? '') !== 'on' || empty($options['ga_fields']['tracking_id']) || ($options['ga_fields']['save_ga_events'] ?? '') !== 'on' || !Lw_All_In_One_Security::consent('analytics')) {
+      wp_send_json_error(__('Analytics recording is disabled or consent is missing.', 'lw-all-in-one'), 403);
     }
-    set_transient($rate_key, $count + 1, MINUTE_IN_SECONDS);
+    foreach (array('event_category', 'event_action', 'event_label') as $field) {
+      if (!isset($_POST[$field]) || !is_string($_POST[$field]) || strlen($_POST[$field]) > 1000) {
+        wp_send_json_error(__('Invalid event payload.', 'lw-all-in-one'), 400);
+      }
+    }
+    $ip = isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
+    if (!Lw_All_In_One_Security::rate_limit('ga-global', 300) || !Lw_All_In_One_Security::rate_limit('ga-ip:' . $ip, 10)) {
+      wp_send_json_error(__('Rate limit exceeded.', 'lw-all-in-one'), 429);
+    }
 
     if (isset($_POST['action']) && $_POST['action'] == 'lw_all_in_one_save_ga_event') {
-      $event_category = sanitize_text_field($_POST['event_category']);
-      $event_action = sanitize_text_field($_POST['event_action']);
-      $event_label = sanitize_text_field($_POST['event_label']);
+      $event_category = substr(sanitize_text_field(wp_unslash($_POST['event_category'])), 0, 250);
+      $event_action = substr(sanitize_text_field(wp_unslash($_POST['event_action'])), 0, 250);
+      $event_label = substr(sanitize_text_field(wp_unslash($_POST['event_label'])), 0, 250);
 
       global $wpdb;
       $table = $wpdb->prefix . LW_ALL_IN_ONE_A_EVENTS_TABLE;
@@ -764,7 +682,8 @@ PEM;
 
     if ($opt_scr_deliv === 'on') {
       global $post;
-      if (!has_shortcode($post->post_content, 'contact-form-7')) {
+      // Preserve dequeue behavior when there is no global post (archives, 404s, etc.).
+      if (empty($post) || !has_shortcode($post->post_content, 'contact-form-7')) {
         add_action('wp_print_styles', 'lw_all_in_one_dequeue_styles');
         add_action('wp_print_scripts', 'lw_all_in_one_dequeue_scripts');
       }

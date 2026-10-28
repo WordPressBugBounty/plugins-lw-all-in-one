@@ -1,6 +1,6 @@
 USR_PREFS_CK_NAME = typeof USR_PREFS_CK_NAME !== "undefined" ? USR_PREFS_CK_NAME : "lwaio_consent_preferences";
 ACTED_CONSENT_CK_NAME = typeof ACTED_CONSENT_CK_NAME !== "undefined" ? ACTED_CONSENT_CK_NAME : "lwaio_consent_acted";
-EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
+EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : 365;
 
 (function ($) {
 	"use strict";
@@ -15,8 +15,14 @@ EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
 			if (domain) {
 				domain = "; domain=" + domain;
 			}
-			document.cookie = name + "=" + value + expires + "; path=/" + domain;
+			document.cookie = name + "=" + value + expires + "; path=/; SameSite=Lax" + (window.location.protocol === 'https:' ? '; Secure' : '') + domain;
 		},
+        preferences: function () {
+            try {
+                let value = JSON.parse(this.read(USR_PREFS_CK_NAME));
+                return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+            } catch (error) { return {}; }
+        },
 		read: function (name) {
 			let nameEQ = name + "=";
 			let ca = document.cookie.split(";");
@@ -91,9 +97,7 @@ EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
 				if (this.settings.auto_scroll) {
 					window.addEventListener("scroll", GDPR.acceptOnScroll, false);
 				}
-				let lwaio_consent_preferences = JSON.parse(
-					GDPR_Cookie.read(USR_PREFS_CK_NAME)
-				);
+				let lwaio_consent_preferences = GDPR_Cookie.preferences();
 				let lwaio_consent_acted = GDPR_Cookie.read(ACTED_CONSENT_CK_NAME);
 				let event = "";
 					event = new CustomEvent("LwAioCookieConsentOnLoad", {
@@ -117,9 +121,7 @@ EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
 				if (button_action == "accept_all") {
 					GDPR.enableAllCookies();
 					GDPR.accept_all_close();
-					lwaio_consent_preferences = JSON.parse(
-						GDPR_Cookie.read(USR_PREFS_CK_NAME)
-					);
+					lwaio_consent_preferences = GDPR_Cookie.preferences();
 					lwaio_consent_preferences_val = JSON.stringify(lwaio_consent_preferences);
 					lwaio_consent_acted = GDPR_Cookie.read(ACTED_CONSENT_CK_NAME);
 						GDPR_Cookie.set(
@@ -138,9 +140,7 @@ EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
 					GDPR.logConsent(button_action);
 				} else if (button_action == "accept") {
 					GDPR.accept_close();
-					lwaio_consent_preferences = JSON.parse(
-						GDPR_Cookie.read(USR_PREFS_CK_NAME)
-					);
+					lwaio_consent_preferences = GDPR_Cookie.preferences();
 					lwaio_consent_preferences_val = JSON.stringify(lwaio_consent_preferences);
 					lwaio_consent_acted = GDPR_Cookie.read(ACTED_CONSENT_CK_NAME);
 						GDPR_Cookie.set(
@@ -160,9 +160,7 @@ EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
 					GDPR.logConsent(button_action);
 				} else if (button_action == "reject") {
 					GDPR.reject_close();
-					lwaio_consent_preferences = JSON.parse(
-						GDPR_Cookie.read(USR_PREFS_CK_NAME)
-					);
+					lwaio_consent_preferences = GDPR_Cookie.preferences();
 					lwaio_consent_acted = GDPR_Cookie.read(ACTED_CONSENT_CK_NAME);
 					GDPR_Cookie.erase(USR_PREFS_CK_NAME);
 					// GDPR_Cookie.erase('lwaio_consent_acted');
@@ -176,7 +174,7 @@ EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
 					let allCookiesList = GDPR_Cookie.getallcookies();
 					if (typeof allCookiesList === "object" && allCookiesList !== null) {
 						jQuery.each(allCookiesList, function (key, value) {
-							if (key != ACTED_CONSENT_CK_NAME) {
+							if (/^(_ga|_gid|_gat|_gcl)/.test(key)) {
 								GDPR_Cookie.erase(key, "." + window.location.host);
 							}
 						});
@@ -197,9 +195,7 @@ EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
 					GDPR.accept_close();
 					lwaio_consent_acted = GDPR_Cookie.read(ACTED_CONSENT_CK_NAME);
 					if (lwaio_consent_acted != "yes") {
-						lwaio_consent_preferences = JSON.parse(
-							GDPR_Cookie.read(USR_PREFS_CK_NAME)
-						);
+						lwaio_consent_preferences = GDPR_Cookie.preferences();
 						lwaio_consent_preferences_val = JSON.stringify(lwaio_consent_preferences);
 						GDPR_Cookie.set(
 							USR_PREFS_CK_NAME,
@@ -223,10 +219,10 @@ EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
 				let lwaio_consent_preferences_arr = {};
 				let lwaio_consent_preferences_val = "";
 				if (GDPR_Cookie.read(USR_PREFS_CK_NAME)) {
-					lwaio_consent_preferences_arr = JSON.parse(
-						GDPR_Cookie.read(USR_PREFS_CK_NAME)
-					);
+					lwaio_consent_preferences_arr = GDPR_Cookie.preferences();
 				}
+				// Never trust checkbox state embedded in a shared cached page.
+				jQuery(this).prop('checked', key === 'necessary' || lwaio_consent_preferences_arr[key] === 'yes');
 				if (key == "necessary" || jQuery(this).is(":checked")) {
 					lwaio_consent_preferences_arr[key] = "yes";
 					GDPR.allowed_categories.push(key);
@@ -263,9 +259,7 @@ EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
 					let lwaio_consent_preferences_arr = {};
 					let lwaio_consent_preferences_val = "";
 					if (GDPR_Cookie.read(USR_PREFS_CK_NAME)) {
-						lwaio_consent_preferences_arr = JSON.parse(
-							GDPR_Cookie.read(USR_PREFS_CK_NAME)
-						);
+						lwaio_consent_preferences_arr = GDPR_Cookie.preferences();
 					}
 					if (jQuery(this).is(":checked")) {
 						lwaio_consent_preferences_arr[key] = "yes";
@@ -594,9 +588,7 @@ EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
 			let lwaio_consent_preferences_arr = {};
 			let lwaio_consent_preferences_val = "";
 			if (GDPR_Cookie.read(USR_PREFS_CK_NAME)) {
-				lwaio_consent_preferences_arr = JSON.parse(
-					GDPR_Cookie.read(USR_PREFS_CK_NAME)
-				);
+				lwaio_consent_preferences_arr = GDPR_Cookie.preferences();
 				jQuery.each(lwaio_consent_preferences_arr, function (key, value) {
 					if (key != "necessary") {
 						lwaio_consent_preferences_arr[key] = "no";
@@ -624,9 +616,7 @@ EXP_CK_NAME = typeof EXP_CK_NAME !== "undefined" ? EXP_CK_NAME : '1 Year';
 			let lwaio_consent_preferences_arr = {};
 			let lwaio_consent_preferences_val = "";
 			if (GDPR_Cookie.read(USR_PREFS_CK_NAME)) {
-				lwaio_consent_preferences_arr = JSON.parse(
-					GDPR_Cookie.read(USR_PREFS_CK_NAME)
-				);
+				lwaio_consent_preferences_arr = GDPR_Cookie.preferences();
 				jQuery.each(lwaio_consent_preferences_arr, function (key, value) {
 					if (key != "necessary") {
 						lwaio_consent_preferences_arr[key] = "yes";

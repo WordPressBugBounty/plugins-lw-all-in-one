@@ -7,7 +7,7 @@ $replacements[0] = $domain;
 $replacements[1] = $date;
 $cookie_file = wp_filter_post_kses(preg_replace($patterns, $replacements, $cookie_file));
 
-if ($page_cookie->ID != '') {
+if ($page_cookie && $page_cookie->ID) {
   $cookie_page = array(
     'ID' => $page_cookie->ID,
     'post_content' => $cookie_file,

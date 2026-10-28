@@ -17,6 +17,7 @@
  * @author     sajdoko <sajmir.doko@localweb.it>
  */
 class Lw_All_In_One_Admin {
+  private $wim_responses = array();
 
   /**
    * The ID of this plugin.
@@ -92,9 +93,24 @@ class Lw_All_In_One_Admin {
   }
 
   public function validate_lw_all_in_one_settings($input) {
+    $existing_options = get_option($this->plugin_name, array());
+    $existing_options = is_array($existing_options) ? $existing_options : array();
+    if (!current_user_can('manage_options') || !is_array($input)) {
+      return $existing_options;
+    }
     if (isset($_POST['option_page']) && $_POST['option_page'] !== $this->plugin_name) {
-      $existing_options = get_option($this->plugin_name, array());
-      return array_merge($existing_options, is_array($input) ? $input : array());
+      if ($_POST['option_page'] === 'lw_all_in_one_perf_settings' && is_array($input['perf_fields'] ?? null)) {
+        $existing_options['perf_fields'] = Lw_All_In_One_Performance_Admin::sanitize_fields($input['perf_fields']);
+      }
+      return $existing_options;
+    }
+    foreach (array('ga_fields', 'wim_fields', 'lw_cf7_fields', 'ck_fields', 'lw_hf_fields', 'lw_aio_fields') as $section) {
+      $input[$section] = isset($input[$section]) && is_array($input[$section]) ? $input[$section] : array();
+      foreach ($input[$section] as $field => $value) {
+        if (!is_scalar($value)) {
+          $input[$section][$field] = '';
+        }
+      }
     }
 
     $valid = array();
@@ -124,7 +140,7 @@ class Lw_All_In_One_Admin {
     $valid['wim_activate'] = (isset($input['wim_activate']) && $input['wim_activate'] === 'on') ? 'on' : '';
 
     if (isset($input['wim_fields']['verification_status']) && isset($input['wim_fields']['save_wim_options']) && isset($input['wim_fields']['token']) && strlen($input['wim_fields']['token']) == 32) {
-      $domain = clean_domain(get_option('siteurl', $_SERVER['HTTP_HOST']));
+      $domain = clean_domain(home_url('/'));
       $wim_settings_arr = array();
       $wim_settings_arr['wim_fields']['verification_status'] = sanitize_text_field($input['wim_fields']['verification_status']);
       $wim_settings_arr['wim_fields']['token'] = sanitize_text_field($input['wim_fields']['token']);
@@ -137,10 +153,11 @@ class Lw_All_In_One_Admin {
       $wim_settings_arr['wim_fields']['messaggio_1'] = (isset($input['wim_fields']['messaggio_1'])) ? sanitize_textarea_field($input['wim_fields']['messaggio_1']) : "Gentilmente, mi può lasciare un contatto telefonico o email in modo da poterla eventualmente ricontattare?";
 
       $api_url = 'https://localweb.it/chat/api/cliente/aggiorna.php';
-      $response = wp_remote_post($api_url, array(
+      $response = $this->send_wim_settings($api_url, array(
         'method' => 'POST',
-        'timeout' => 45,
-        'redirection' => 5,
+        'timeout' => 10,
+        'redirection' => 0,
+        'limit_response_size' => 16384,
         'blocking' => true,
         'headers' => array(),
         'body' => json_encode(array('stato_wim' => $valid['wim_activate'], 'domain' => $domain, 'plugin_token' => $wim_settings_arr['wim_fields']['token'], 'auto_show_wim' => $wim_settings_arr['wim_fields']['auto_show_wim'], 'show_wim_after' => $wim_settings_arr['wim_fields']['show_wim_after'], 'show_mobile' => $wim_settings_arr['wim_fields']['show_mobile'], 'lingua' => $wim_settings_arr['wim_fields']['lingua'], 'messaggio_0' => $wim_settings_arr['wim_fields']['messaggio_0'], 'messaggio_1' => $wim_settings_arr['wim_fields']['messaggio_1'])),
@@ -150,23 +167,23 @@ class Lw_All_In_One_Admin {
       $ret_body = wp_remote_retrieve_body($response);
       $data = recursive_sanitize_array_object(json_decode($ret_body));
 
-      if (is_wp_error($response)) {
+      if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200 || !is_object($data) || !is_string($data->response ?? null)) {
         $valid['wim_fields']['verification_status'] = '';
-        $error_message = $response->get_error_message();
+
         add_settings_error(
           $this->plugin_name,
           $this->plugin_name . '_settings_not_updated_error',
           esc_html__('Something went wrong!', 'lw-all-in-one'),
           'error'
         );
-      } elseif ((isset($data->response)) && $data->response == 'success') {
+      } elseif ((isset($data->response)) && $data->response === 'success') {
         $valid = array_merge($valid, $wim_settings_arr);
-      } elseif ((isset($data->response)) && $data->response == 'danger') {
+      } elseif ((isset($data->response)) && $data->response === 'danger') {
         $valid['wim_fields']['verification_status'] = '';
         add_settings_error(
           $this->plugin_name,
           $this->plugin_name . '_settings_not_updated_danger',
-          ($data != 'null') ? json_encode($data) : __('Invalid response from API server!', 'lw-all-in-one'),
+          __('Invalid response from API server!', 'lw-all-in-one'),
           'error'
         );
       } else {
@@ -174,7 +191,7 @@ class Lw_All_In_One_Admin {
         add_settings_error(
           $this->plugin_name,
           $this->plugin_name . '_settings_not_updated_not_known',
-          ($data != 'null') ? json_encode($data) : __('Invalid response from API server!', 'lw-all-in-one'),
+          __('Invalid response from API server!', 'lw-all-in-one'),
           'error'
         );
       }
@@ -217,8 +234,14 @@ class Lw_All_In_One_Admin {
     }
     $valid['lw_hf_fields']['insert_header'] = (isset($input['lw_hf_fields']['insert_header'])) ? $this->sanitize_header_footer_scripts($input['lw_hf_fields']['insert_header']) : '';
     $valid['lw_hf_fields']['insert_footer'] = (isset($input['lw_hf_fields']['insert_footer'])) ? $this->sanitize_header_footer_scripts($input['lw_hf_fields']['insert_footer']) : '';
+    if (!current_user_can('unfiltered_html')) {
+      $valid['lw_hf_fields'] = $existing_options['lw_hf_fields'] ?? array();
+    }
 
     $valid['lw_aio_fields']['delete_data'] = (isset($input['lw_aio_fields']['delete_data']) && $input['lw_aio_fields']['delete_data'] === 'on') ? 'on' : '';
+    $valid['lw_aio_fields']['retention_days'] = max(1, min(3650, absint($input['lw_aio_fields']['retention_days'] ?? 14)));
+    $valid['lw_aio_fields']['ga_retention_days'] = max(1, min(3650, absint($input['lw_aio_fields']['ga_retention_days'] ?? 90)));
+    $valid['lw_cf7_fields']['release_old_submissions'] = (($input['lw_cf7_fields']['release_old_submissions'] ?? '') === 'on') ? 'on' : '';
     $valid['lw_aio_fields']['data_retention'] = (isset($input['lw_aio_fields']['data_retention']) && $input['lw_aio_fields']['data_retention'] === 'on') ? 'on' : '';
 
     $exiting_options = get_option($this->plugin_name);
@@ -233,6 +256,15 @@ class Lw_All_In_One_Admin {
       return;
     }
     register_setting($this->plugin_name, $this->plugin_name, array('sanitize_callback' => array($this, 'validate_lw_all_in_one_settings')));
+  }
+
+  private function send_wim_settings($url, $args) {
+    // WordPress may run the option sanitizer twice on first save.
+    $key = hash('sha256', wp_json_encode($args));
+    if (!array_key_exists($key, $this->wim_responses)) {
+      $this->wim_responses[$key] = wp_remote_post($url, $args);
+    }
+    return $this->wim_responses[$key];
   }
 
   public function get_plugin_options($parent_key = false, $key = false) {
@@ -282,6 +314,14 @@ class Lw_All_In_One_Admin {
   public function sanitize_header_footer_scripts($scripts) {
     if (!current_user_can('unfiltered_html')) {
       return '';
+    }
+    if (!is_string($scripts)) {
+      return '';
+    }
+    // Settings API can sanitize a newly added option twice.
+    $decoded = base64_decode($scripts, true);
+    if ($decoded !== false && base64_encode($decoded) === $scripts && strpos($decoded, '<') !== false) {
+      $scripts = $decoded;
     }
     // Remove PHP code
     $scripts = preg_replace('/<\?.*?(?:\?>|$)/s', '', $scripts);
@@ -336,6 +376,7 @@ class Lw_All_In_One_Admin {
 
       delete_option('lw_all_in_one');
       delete_option('lw_all_in_one_version');
+      delete_option('lw_all_in_one_cf7_schema');
       delete_option('lw_all_in_one_privacy_pages');
 
       if (wp_next_scheduled('lw_all_in_one_data_retention')) {
@@ -426,26 +467,8 @@ class Lw_All_In_One_Admin {
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom table creation
         dbDelta($sql1);
       }
-      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table check
-      if ($wpdb->get_var("show tables like '$cf7_table'") != $cf7_table) {
-        $sql2 = "CREATE TABLE $cf7_table (
-              id mediumint(9) NOT NULL AUTO_INCREMENT,
-              subject text DEFAULT '' NULL,
-              message text DEFAULT '' NULL,
-              name varchar(150) DEFAULT '' NULL,
-              surname varchar(150) DEFAULT '' NULL,
-              time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-              email varchar(100) DEFAULT '' NULL,
-              phone varchar(100) DEFAULT '' NULL,
-              tipo_Contratto varchar(10) DEFAULT '' NULL,
-              id_Contratto varchar(10) DEFAULT '' NULL,
-              submited_page text DEFAULT '' NULL,
-              sent varchar(2) DEFAULT '' NULL,
-              PRIMARY KEY (id)
-            ) $charset_collate;";
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom table creation
-        dbDelta($sql2);
-      }
+      require_once dirname(__DIR__) . '/includes/class-lw-all-in-one-cf7-sync.php';
+      Lw_All_In_One_Cf7_Sync::maybe_upgrade();
 
       wp_send_json_success(array('message' => __('Options were reset to defaults!', 'lw-all-in-one')));
       die();
@@ -453,39 +476,39 @@ class Lw_All_In_One_Admin {
   }
 
   public function lw_all_in_one_clean_admin_notices() {
-    global $wp_filter;
+    // Compatibility no-op: preserve third-party security notices.
+  }
 
-    $hooks = array( 'admin_notices', 'user_admin_notices', 'network_admin_notices' );
-    $allowed_functions = array( 'update_nag', 'maintenance_nag', 'site_admin_notice', 'settings_errors', 'welcome_panel' );
-
-    foreach ( $hooks as $hook ) {
-        if ( empty( $wp_filter[ $hook ] ) ) {
-            continue;
-        }
-
-        foreach ( $wp_filter[ $hook ]->callbacks as $priority => $callbacks ) {
-            foreach ( $callbacks as $id => $callback ) {
-                $function = $callback['function'];
-
-                $is_allowed = false;
-
-                if ( is_string( $function ) && in_array( $function, $allowed_functions ) ) {
-                    $is_allowed = true;
-                }
-
-                if ( is_array( $function ) ) {
-                    $class = is_object( $function[0] ) ? get_class( $function[0] ) : (is_string($function[0]) ? $function[0] : '');
-                    // Allow our own plugin and any core WordPress classes
-                    if ( strpos( $class, 'Lw_All_In_One' ) !== false || strpos( $class, 'WP_' ) === 0 ) {
-                        $is_allowed = true;
-                    }
-                }
-
-                if ( ! $is_allowed ) {
-                    unset( $wp_filter[ $hook ]->callbacks[ $priority ][ $id ] );
-                }
-            }
-        }
+  public function legacy_cleanup() {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !current_user_can('manage_options') || is_multisite()) {
+      wp_die(esc_html__('Permission denied. Use network administration for network plugins.', 'lw-all-in-one'), '', array('response' => 403));
     }
+    check_admin_referer('lw_all_in_one_legacy_cleanup');
+    $targets = array(
+      'italy-cookie-choices/italy-cookie-choices.php',
+      'google-analytics-dashboard-for-wp/gadwp.php',
+      'web-instant-messenger/web-instant-messenger.php',
+      'lw-contact-form/localweb.php',
+    );
+    $selected = isset($_POST['legacy_plugins']) && is_array($_POST['legacy_plugins']) ? array_map('sanitize_text_field', wp_unslash($_POST['legacy_plugins'])) : array();
+    $selected = array_values(array_intersect($targets, $selected));
+    $delete = isset($_POST['delete_legacy']) && $_POST['delete_legacy'] === 'yes';
+    foreach ($selected as $plugin) {
+      if (!current_user_can('deactivate_plugin', $plugin) || ($delete && !current_user_can('delete_plugins'))) {
+        wp_die(esc_html__('Permission denied.', 'lw-all-in-one'), '', array('response' => 403));
+      }
+    }
+    foreach ($selected as $plugin) {
+      deactivate_plugins($plugin);
+      if ($delete) {
+        $result = delete_plugins(array($plugin));
+        if ($result !== true) {
+          wp_die(esc_html__('Plugin deletion failed. Original integration settings have been retained.', 'lw-all-in-one'));
+        }
+      }
+    }
+    update_option('lw_all_in_one_legacy_cleanup', array('time' => time(), 'plugins' => $selected), false);
+    wp_safe_redirect(admin_url('admin.php?page=lw_all_in_one&tab=tab_aio_options'));
+    exit;
   }
 }

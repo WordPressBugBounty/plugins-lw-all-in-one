@@ -1,3 +1,9 @@
+function lwaio_push_ecommerce(event) {
+    if (window.lwAioHasConsent && window.lwAioHasConsent('analytics')) {
+        window.dataLayer.push(event);
+    }
+}
+
 window.lwaio_last_selected_product_variation;
 window.lwaio_changedetail_fired_during_pageload=false;
 
@@ -97,7 +103,7 @@ function lwaio_handle_cart_qty_change() {
 				};
 
 				// fire ga3 version
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'lwaio.addProductToCart',
 					'ecommerce': {
 						'currencyCode': lwaio_currency,
@@ -108,7 +114,7 @@ function lwaio_handle_cart_qty_change() {
 				});
 
 				// fire ga4 version
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'add_to_cart',
 					'ecommerce': {
 						'currency': lwaio_currency, // ga4 version
@@ -130,7 +136,7 @@ function lwaio_handle_cart_qty_change() {
 				};
 
 				// fire ga3 version
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'lwaio.removeFromCart',
 					'ecommerce': {
 						'currencyCode': lwaio_currency,
@@ -141,7 +147,7 @@ function lwaio_handle_cart_qty_change() {
 				});
 
 				// fire ga4 version
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'remove_from_cart',
 					'ecommerce': {
 						'currency': lwaio_currency,
@@ -175,7 +181,7 @@ function lwaio_handle_payment_method_change() {
 	}
 
 	// fire ga3 version
-	window['dataLayer'].push({
+	lwaio_push_ecommerce({
 		'event': 'lwaio.checkoutStep',
 		'ecommerce': {
 			'currencyCode': lwaio_currency,
@@ -189,7 +195,7 @@ function lwaio_handle_payment_method_change() {
 	});
 
 	// fire ga4 version
-	window['dataLayer'].push({
+	lwaio_push_ecommerce({
 		'event': 'add_payment_info',
 		'ecommerce': {
 			'currency': lwaio_currency,
@@ -223,7 +229,7 @@ function lwaio_handle_shipping_method_change() {
 	}
 
 	// fire ga3 version
-	window['dataLayer'].push({
+	lwaio_push_ecommerce({
 		'event': 'lwaio.checkoutStep',
 		'ecommerce': {
 			'currencyCode': lwaio_currency,
@@ -237,7 +243,7 @@ function lwaio_handle_shipping_method_change() {
 	});
 
 	// fire ga4 version
-	window['dataLayer'].push({
+	lwaio_push_ecommerce({
 		'event': 'add_shipping_info',
 		'ecommerce': {
 			'currency': lwaio_currency,
@@ -251,6 +257,8 @@ function lwaio_handle_shipping_method_change() {
 }
 
 function lwaio_process_woocommerce_pages() {
+    if (!window.lwAioHasConsent || !window.lwAioHasConsent('analytics') || window.lwaio_ecommerce_initialized) { return; }
+    window.lwaio_ecommerce_initialized = true;
 	window.lwaio_is_cart     = false;
 	window.lwaio_is_checkout = false;
 
@@ -422,7 +430,7 @@ function lwaio_process_woocommerce_pages() {
 		};
 
 		// fire ga3 version
-		window['dataLayer'].push({
+		lwaio_push_ecommerce({
 			'event': 'lwaio.addProductToCart',
 			'ecommerce': {
 				'currencyCode': lwaio_currency,
@@ -433,7 +441,7 @@ function lwaio_process_woocommerce_pages() {
 		});
 
 		// fire ga4 version
-		window['dataLayer'].push({
+		lwaio_push_ecommerce({
 			'event': 'add_to_cart',
 			'ecommerce': {
 				'currency': lwaio_currency,
@@ -476,7 +484,7 @@ function lwaio_process_woocommerce_pages() {
 				lwaio_last_selected_product_variation.quantity = (qty_el && qty_el.value) || 1;
 
 				// fire ga3 version
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'lwaio.addProductToCart',
 					'ecommerce': {
 						'currencyCode': lwaio_currency,
@@ -487,7 +495,7 @@ function lwaio_process_woocommerce_pages() {
 				});
 
 				// fire ga4 version
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'add_to_cart',
 					'ecommerce': {
 						'currency': lwaio_currency,
@@ -534,7 +542,7 @@ function lwaio_process_woocommerce_pages() {
 			}
 
 			// fire ga3 version
-			window['dataLayer'].push({
+			lwaio_push_ecommerce({
 				'event': 'lwaio.addProductToCart',
 				'ecommerce': {
 					'currencyCode': lwaio_currency,
@@ -545,7 +553,7 @@ function lwaio_process_woocommerce_pages() {
 			});
 
 			// fire ga4 version
-			window['dataLayer'].push({
+			lwaio_push_ecommerce({
 				'event': 'add_to_cart',
 				'ecommerce': {
 					'currency': lwaio_currency,
@@ -566,7 +574,7 @@ function lwaio_process_woocommerce_pages() {
 			};
 
 			// fire ga3 version
-			window['dataLayer'].push({
+			lwaio_push_ecommerce({
 				'event': 'lwaio.addProductToCart',
 				'ecommerce': {
 					'currencyCode': lwaio_currency,
@@ -577,7 +585,7 @@ function lwaio_process_woocommerce_pages() {
 			});
 
 			// fire ga4 version
-			window['dataLayer'].push({
+			lwaio_push_ecommerce({
 				'event': 'add_to_cart',
 				'ecommerce': {
 					'currency': lwaio_currency,
@@ -630,7 +638,7 @@ function lwaio_process_woocommerce_pages() {
 		};
 
 		// fire ga3 version
-		window['dataLayer'].push({
+		lwaio_push_ecommerce({
 			'event': 'lwaio.removeFromCart',
 			'ecommerce': {
 				'currencyCode': lwaio_currency,
@@ -641,7 +649,7 @@ function lwaio_process_woocommerce_pages() {
 		});
 
 		// fire ga4 version
-		window['dataLayer'].push({
+		lwaio_push_ecommerce({
 			'event': 'remove_from_cart',
 			'ecommerce': {
 				'currency': lwaio_currency,
@@ -741,7 +749,7 @@ function lwaio_process_woocommerce_pages() {
 		}
 
 		// fire ga3 version
-		window['dataLayer'].push({
+		lwaio_push_ecommerce({
 			'event': 'lwaio.productClick',
 			'ecommerce': {
 				'currencyCode': lwaio_currency,
@@ -757,7 +765,7 @@ function lwaio_process_woocommerce_pages() {
 				}
 
 				// fire ga4 version
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'select_item',
 					'ecommerce': {
 						'currency': lwaio_currency,
@@ -830,7 +838,7 @@ function lwaio_process_woocommerce_pages() {
 		lwaio_last_selected_product_variation = current_product_detail_data;
 
 		// fire ga3 version
-		window['dataLayer'].push({
+		lwaio_push_ecommerce({
 			'event': 'lwaio.changeDetailView',
 			'ecommerce': {
 				'currencyCode': lwaio_currency,
@@ -844,7 +852,7 @@ function lwaio_process_woocommerce_pages() {
 		});
 
 		// fire ga4 version
-		window['dataLayer'].push({
+		lwaio_push_ecommerce({
 			'event': 'view_item',
 			'ecommerce': {
 				'currency': lwaio_currency,
@@ -872,7 +880,7 @@ function lwaio_process_woocommerce_pages() {
 						try {
 							const dl_data_obj = JSON.parse( dl_data.dataset.lwaio_datalayer );
 							if ( dl_data_obj && window.dataLayer ) {
-								window.dataLayer.push(dl_data_obj);
+								lwaio_push_ecommerce(dl_data_obj);
 							}
 						} catch(e) {
 							console && console.error && console.error( e.message );
@@ -947,7 +955,7 @@ function lwaio_process_woocommerce_pages() {
 				return;
 			}
 
-			window['dataLayer'].push({
+			lwaio_push_ecommerce({
 				'event': 'lwaio.checkoutStep',
 				'ecommerce': {
 					'currencyCode': lwaio_currency, // ga3 version
@@ -1021,7 +1029,7 @@ function lwaio_process_woocommerce_pages() {
 				shipping_el = document.querySelector( 'input[name^=shipping_method]' ); // select the first input element
 			}
 			if ( shipping_el ) {
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'lwaio.checkoutOption',
 					'ecommerce': {
 						'checkout_option': {
@@ -1039,7 +1047,7 @@ function lwaio_process_woocommerce_pages() {
 				payment_el = document.querySelector( 'input[name^=payment_method]' ); // select the first input element
 			}
 			if ( payment_el ) {
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'lwaio.checkoutOption',
 					'ecommerce': {
 						'checkout_option': {
@@ -1088,7 +1096,7 @@ function lwaio_process_woocommerce_pages() {
 		window['dataLayer'].forEach(function( item ) {
 
 			if ( item && item.ecommerce && item.ecommerce.detail ) {
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'view_item',
 					'ecommerce': {
 						'currency': lwaio_currency,
@@ -1108,7 +1116,7 @@ function lwaio_process_woocommerce_pages() {
 					sum_value += product.price * product.quantity;
 				});
 
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'view_cart',
 					'ecommerce': {
 						'currency': lwaio_currency,
@@ -1127,7 +1135,7 @@ function lwaio_process_woocommerce_pages() {
 					sum_value += product.price * product.quantity;
 				});
 
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'begin_checkout',
 					'ecommerce': {
 						'currency': lwaio_currency,
@@ -1147,7 +1155,7 @@ function lwaio_process_woocommerce_pages() {
 					sum_value += product.price * product.quantity;
 				});
 
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'add_to_cart',
 					'ecommerce': {
 						'currency': lwaio_currency,
@@ -1163,7 +1171,7 @@ function lwaio_process_woocommerce_pages() {
 					ga4_products.push( lwaio_map_ec_to_ga4( product ) );
 				});
 
-				window['dataLayer'].push({
+				lwaio_push_ecommerce({
 					'event': 'purchase',
 					'ecommerce': {
 						'currency': lwaio_currency,
@@ -1195,3 +1203,6 @@ if ( document.readyState !== "loading" ) {
 	document.addEventListener( "DOMContentLoaded", lwaio_page_loading_completed );
 	window.addEventListener( "load", lwaio_page_loading_completed );
 }
+
+window.addEventListener('LwAioCookieConsentOnAccept', lwaio_process_woocommerce_pages);
+window.addEventListener('LwAioCookieConsentOnAcceptAll', lwaio_process_woocommerce_pages);

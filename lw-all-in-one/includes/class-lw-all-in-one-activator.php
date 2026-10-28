@@ -174,26 +174,8 @@ class Lw_All_In_One_Activator {
       dbDelta($sql1);
     }
 
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table check
-    if ($wpdb->get_var("show tables like '$cf7_table'") != $cf7_table) {
-      $sql2 = "CREATE TABLE $cf7_table (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            subject text DEFAULT '' NULL,
-            message text DEFAULT '' NULL,
-            name varchar(150) DEFAULT '' NULL,
-            surname varchar(150) DEFAULT '' NULL,
-            time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-            email varchar(100) DEFAULT '' NULL,
-            phone varchar(100) DEFAULT '' NULL,
-            tipo_Contratto varchar(10) DEFAULT '' NULL,
-            id_Contratto varchar(10) DEFAULT '' NULL,
-            submited_page text DEFAULT '' NULL,
-            sent varchar(2) DEFAULT '' NULL,
-            PRIMARY KEY (id)
-          ) $charset_collate;";
-      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom table creation
-      dbDelta($sql2);
-    }
+    require_once dirname(__DIR__) . '/includes/class-lw-all-in-one-cf7-sync.php';
+    Lw_All_In_One_Cf7_Sync::maybe_upgrade();
 
     $old_cf7_table = $wpdb->prefix . 'inserimenti_cf';
     $old_cf7_table_transfer_err = array();
@@ -217,24 +199,6 @@ class Lw_All_In_One_Activator {
       }
     }
 
-    if (is_plugin_active('web-instant-messenger/web-instant-messenger.php')) {
-      deactivate_plugins('web-instant-messenger/web-instant-messenger.php');
-    }
-    if (is_plugin_active('lw-contact-form/localweb.php')) {
-      deactivate_plugins('lw-contact-form/localweb.php');
-    }
-    if (is_plugin_active('lw-cookie-privacy/lw-cookie-privacy.php')) {
-      deactivate_plugins('lw-cookie-privacy/lw-cookie-privacy.php');
-    }
-    if (is_plugin_active('google-analytics-dashboard-for-wp/gadwp.php')) {
-      deactivate_plugins('google-analytics-dashboard-for-wp/gadwp.php');
-    }
-    if (is_plugin_active('woocommerce-google-analytics-integration/woocommerce-google-analytics-integration.php')) {
-      deactivate_plugins('woocommerce-google-analytics-integration/woocommerce-google-analytics-integration.php');
-    }
-    if (is_plugin_active('italy-cookie-choices/italy-cookie-choices.php')) {
-      deactivate_plugins('italy-cookie-choices/italy-cookie-choices.php');
-    }
     if (is_plugin_active('wp-fastest-cache/wpFastestCache.php')) {
       // Exclude from cache 'lwaio_*' cookies
       update_option( 'WpFastestCacheExclude', json_encode([["prefix" => "contain", "content" => "lwaio_", "type" => "cookie"]]));

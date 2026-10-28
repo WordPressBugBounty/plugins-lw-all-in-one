@@ -33,7 +33,6 @@ class Lw_All_In_One_Cf7 {
    * @var      string    $version    The current version of this plugin.
    */
   private $version;
-  private $lw_api_url = 'https://localwebapi.ids.al/contactFormWeb';
 
   /**
    * Initialize the class and set its properties.
@@ -66,52 +65,25 @@ class Lw_All_In_One_Cf7 {
     $lw_cf7_fields_saved_id_contratto = (isset($options['lw_cf7_fields']['id_contratto'])) ? sanitize_text_field($options['lw_cf7_fields']['id_contratto']) : '';
 
 
-    $url_path = "http://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}";
-    $domain = htmlspecialchars($url_path, ENT_QUOTES, 'UTF-8');
-    $domain = trim($domain, '/');
-    if (!preg_match('#^http(s)?://#', $domain)) {
-      $domain = 'http://' . $domain;
-    }
-    $url_parts = wp_parse_url($domain);
-    $submited_page = preg_replace('/^www\./', '', $url_parts['host']);
+    $submited_page = wp_parse_url(home_url('/'), PHP_URL_HOST);
 
     $submission = WPCF7_Submission::get_instance();
-    $posted_data = &$submission->get_posted_data();
+    if (!$submission) {
+      return;
+    }
+    $posted_data = $submission->get_posted_data();
 
     if (isset($posted_data['nome'])) {
       $mapped_field = array();
       $mapped_field['nome'] = sanitize_text_field($posted_data['nome']);
-      $mapped_field['cognome'] = sanitize_text_field($posted_data['cognome']);
-      $mapped_field['email'] = sanitize_email($posted_data['email']);
-      $mapped_field['telefono'] = sanitize_text_field($posted_data['telefono']);
-      $mapped_field['oggetto'] = sanitize_text_field($posted_data['oggetto']);
-      $mapped_field['messaggio'] = sanitize_textarea_field($posted_data['messaggio']);
-      $mapped_field['tipo_Contratto'] = ($lw_cf7_fields_saved_tipo_contratto != '') ? sanitize_text_field($lw_cf7_fields_saved_tipo_contratto) : sanitize_text_field($posted_data['tipo-contratto']);
-      $mapped_field['id_Contratto'] = ($lw_cf7_fields_saved_id_contratto != '') ? sanitize_text_field($lw_cf7_fields_saved_id_contratto) : sanitize_text_field($posted_data['id-contratto']);
+      $mapped_field['cognome'] = sanitize_text_field(($posted_data['cognome'] ?? ''));
+      $mapped_field['email'] = sanitize_email(($posted_data['email'] ?? ''));
+      $mapped_field['telefono'] = sanitize_text_field(($posted_data['telefono'] ?? ''));
+      $mapped_field['oggetto'] = sanitize_text_field(($posted_data['oggetto'] ?? ''));
+      $mapped_field['messaggio'] = sanitize_textarea_field(($posted_data['messaggio'] ?? ''));
+      $mapped_field['tipo_Contratto'] = ($lw_cf7_fields_saved_tipo_contratto != '') ? sanitize_text_field($lw_cf7_fields_saved_tipo_contratto) : sanitize_text_field(($posted_data['tipo-contratto'] ?? ''));
+      $mapped_field['id_Contratto'] = ($lw_cf7_fields_saved_id_contratto != '') ? sanitize_text_field($lw_cf7_fields_saved_id_contratto) : sanitize_text_field(($posted_data['id-contratto'] ?? ''));
       $mapped_field['submited_page'] = esc_url_raw($submited_page);
-
-      $json_mapped_fields = json_encode($mapped_field);
-
-      $args = array(
-        'body' => $json_mapped_fields,
-        'timeout' => '5',
-        'redirection' => '5',
-        'httpversion' => '1.0',
-        'blocking' => true,
-        'headers' => array(),
-        'cookies' => array(),
-      );
-
-      $send = wp_remote_post($this->lw_api_url, $args);
-      $ret_body = wp_remote_retrieve_body($send);
-      $data = recursive_sanitize_array_object(json_decode($ret_body));
-      if (is_wp_error($ret_body)) {
-        $sent = "No";
-      } elseif ($data->response == "OK") {
-        $sent = "Si";
-      } else {
-        $sent = "No";
-      }
 
       global $wpdb;
       $name = $mapped_field['nome'];
@@ -127,7 +99,7 @@ class Lw_All_In_One_Cf7 {
       if ($lw_cf7_fields_saved_cf7_subm === 'on') {
         $cf7_table = $wpdb->prefix . LW_ALL_IN_ONE_CF7_TABLE;
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Custom table insert
-        $wpdb->insert(
+        $inserted = $wpdb->insert(
           $cf7_table,
           array(
             'time' => $time,
@@ -140,9 +112,13 @@ class Lw_All_In_One_Cf7 {
             'tipo_Contratto' => $tipo_Contratto,
             'id_Contratto' => $id_Contratto,
             'submited_page' => $submited_page,
-            'sent' => $sent,
+            'sent' => 'No',
           )
         );
+        if ($inserted) {
+          // Preserve the initial API payload while sharing durable retry/circuit state.
+          Lw_All_In_One_Cf7_Sync::run((int) $wpdb->insert_id, $mapped_field);
+        }
       }
     }
   }
@@ -156,11 +132,7 @@ class Lw_All_In_One_Cf7 {
   }
 
   public function lw_all_in_one_old_cf7_is_active_deactivate() {
-    if (is_plugin_active('lw-contact-form/localweb.php')) {
-      deactivate_plugins('lw-contact-form/localweb.php');
-    } elseif (is_plugin_inactive('lw-contact-form/localweb.php')) {
-      delete_plugins(array('lw-contact-form/localweb.php'));
-    }
+    // Compatibility no-op. Legacy migration requires an explicit authorized POST.
   }
 
   public function lw_all_in_one_cf7_screen_options( $result, $option, $value ) {

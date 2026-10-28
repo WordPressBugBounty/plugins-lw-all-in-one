@@ -323,7 +323,7 @@ jQuery(document).ready(function($) {
       type: 'POST',
       data: {
         action: 'lw_all_in_one_clear_perf_cache',
-        security: '<?php echo wp_create_nonce('lw_all_in_one'); ?>'
+        security: '<?php echo esc_js(wp_create_nonce('lw_all_in_one')); ?>'
       },
       success: function(response) {
         if (response.success) {
@@ -352,7 +352,7 @@ jQuery(document).ready(function($) {
       type: 'POST',
       data: {
         action: 'lw_all_in_one_regenerate_critical_css',
-        security: '<?php echo wp_create_nonce('lw_all_in_one'); ?>'
+        security: '<?php echo esc_js(wp_create_nonce('lw_all_in_one')); ?>'
       },
       success: function(response) {
         if (response.success) {

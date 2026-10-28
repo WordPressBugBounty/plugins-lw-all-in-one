@@ -26,6 +26,7 @@ class Lw_All_In_One_Ga_Events_List_Table {
   }
 
   public function lw_all_in_one_ga_events_list_table() {
+    if (!current_user_can('manage_options')) { wp_die(esc_html__('Permission denied.', 'lw-all-in-one')); }
 
     $ListTableClassGa = new Lw_All_In_One_Ga_Events_List_Table_Class();
     $ListTableClassGa->prepare_items();
@@ -69,22 +70,10 @@ class Lw_All_In_One_Ga_Events_List_Table_Class extends WP_List_Table {
 
     $this->process_bulk_action();
 
-    $data = $this->table_data();
-    usort($data, array(&$this, 'sort_data'));
-
-    $perPage = 10;
-    $current_screen = get_current_screen();
-    // wp_die($current_screen->id);
-		$perPage = $this->get_items_per_page( 'records_per_page' );
-    $currentPage = $this->get_pagenum();
-    $totalItems = count($data);
-
-    $this->set_pagination_args(array(
-      'total_items' => $totalItems,
-      'per_page' => $perPage,
-    ));
-
-    $data = array_slice($data, (($currentPage - 1) * $perPage), $perPage);
+    $perPage = max(1, min(100, $this->get_items_per_page('records_per_page')));
+    $currentPage = max(1, $this->get_pagenum());
+    $data = $this->table_data($perPage, $currentPage);
+    $this->set_pagination_args(array('total_items' => $this->total_records, 'per_page' => $perPage));
 
     $this->_column_headers = array($columns, $hidden, $sortable);
 
@@ -94,11 +83,11 @@ class Lw_All_In_One_Ga_Events_List_Table_Class extends WP_List_Table {
   public function column_ga_category($item) {
     $delete_url = wp_nonce_url( '?page='.sanitize_text_field($_REQUEST['page']).'&action=delete-ga&record_id='.absint($item['id']).'', 'delete' );
     $actions = array(
-      'delete' => sprintf('<a href="%s" id="lw_aio_delete_record">Delete</a>', $delete_url),
+      'delete' => sprintf('<a href="%s" id="lw_aio_delete_record">Delete</a>', esc_url($delete_url)),
     );
 
     return sprintf('%1$s <span style="color:silver">(id:%2$s)</span>%3$s',
-      /*$1%s*/$item['ga_category'],
+      /*$1%s*/esc_html($item['ga_category']),
       /*$2%s*/$item['id'],
       /*$3%s*/$this->row_actions($actions)
     );
@@ -135,19 +124,25 @@ class Lw_All_In_One_Ga_Events_List_Table_Class extends WP_List_Table {
     return $sortable_columns;
   }
 
-  private function table_data() {
-    $data = array();
+  private $total_records = 0;
 
+  private function table_data($limit, $page) {
+    if (!current_user_can('manage_options')) {
+      wp_die(esc_html__('Permission denied.', 'lw-all-in-one'));
+    }
     global $wpdb;
     $table_name = $wpdb->prefix . LW_ALL_IN_ONE_A_EVENTS_TABLE;
-    $s = (isset($_REQUEST['s'])) ? sanitize_text_field(wp_unslash($_REQUEST['s'])) : '';
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table query
-    $data = $wpdb->get_results(
-      $wpdb->prepare("SELECT * FROM $table_name WHERE ga_category LIKE %s OR ga_action LIKE %s OR ga_label LIKE %s", '%'.$s.'%', '%'.$s.'%', '%'.$s.'%'),
-      ARRAY_A
-    );
-
-    return $data;
+    $search = isset($_REQUEST['s']) ? sanitize_text_field(wp_unslash($_REQUEST['s'])) : '';
+    $like = '%' . $wpdb->esc_like($search) . '%';
+    $allowed = array('id', 'time', 'ga_category', 'ga_action', 'ga_label');
+    $requested = isset($_GET['orderby']) ? sanitize_key(wp_unslash($_GET['orderby'])) : 'id';
+    $orderby = in_array($requested, $allowed, true) ? $requested : 'id';
+    $order = isset($_GET['order']) && $_GET['order'] === 'asc' ? 'ASC' : 'DESC';
+    $this->total_records = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE ga_category LIKE %s OR ga_action LIKE %s OR ga_label LIKE %s", $like, $like, $like));
+    return $wpdb->get_results($wpdb->prepare(
+      "SELECT * FROM $table_name WHERE ga_category LIKE %s OR ga_action LIKE %s OR ga_label LIKE %s ORDER BY $orderby $order LIMIT %d OFFSET %d",
+      $like, $like, $like, $limit, ($page - 1) * $limit
+    ), ARRAY_A);
   }
 
   public function column_default($item, $column_name) {
@@ -156,33 +151,11 @@ class Lw_All_In_One_Ga_Events_List_Table_Class extends WP_List_Table {
     case 'ga_action':
     case 'ga_label':
     case 'time':
-      return $item[$column_name];
+      return esc_html((string) $item[$column_name]);
 
     default:
-      return print_r($item, true);
+      return '';
     }
-  }
-
-  private function sort_data($a, $b) {
-
-    $orderby = 'id';
-    $order = 'asc';
-
-    if (!empty($_GET['orderby'])) {
-      $orderby = absint(sanitize_text_field($_GET['orderby']));
-    }
-
-    if (!empty($_GET['order'])) {
-      $order = sanitize_text_field($_GET['order']);
-    }
-
-    $result = strcmp($a[$orderby], $b[$orderby]);
-
-    if ($order === 'desc') {
-      return $result;
-    }
-
-    return -$result;
   }
 
   public function get_bulk_actions() {
@@ -191,14 +164,15 @@ class Lw_All_In_One_Ga_Events_List_Table_Class extends WP_List_Table {
   }
 
   protected function process_bulk_action() {
+    if (!current_user_can('manage_options')) { wp_die(esc_html__('Permission denied.', 'lw-all-in-one')); }
 
     if ('delete-ga' === $this->current_action()) {
-      if (!wp_verify_nonce($_REQUEST['_wpnonce'], 'delete')) {
+      if (!wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['_wpnonce'] ?? '')), 'delete')) {
         wp_die( esc_html__('Not valid request!', 'lw-all-in-one') );
       }
       self::wpdb_delete_records(absint(sanitize_text_field($_REQUEST['record_id'])));
     } else if ('bulk-delete-ga' === $this->current_action()) {
-      if (!wp_verify_nonce($_REQUEST['bulk_delete_nonce_ga'], 'bulk_delete_records_ga')) {
+      if (!wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['bulk_delete_nonce_ga'] ?? '')), 'bulk_delete_records_ga')) {
         wp_die( esc_html__('Not valid request!', 'lw-all-in-one') );
       }
       if (isset($_REQUEST['bulk-delete-ga']) && is_array($_REQUEST['bulk-delete-ga'])) {
@@ -225,7 +199,7 @@ class Lw_All_In_One_Ga_Events_List_Table_Class extends WP_List_Table {
     global $wpdb;
     $table_name = $wpdb->prefix . LW_ALL_IN_ONE_A_EVENTS_TABLE;
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table count
-    return $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name"));
+    return $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
   }
 }
 

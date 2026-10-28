@@ -2,7 +2,7 @@
 	'use strict';
 
 	function lwAioSaveGaEvent(gaCategory, gaAction, gaLabel) {
-		if (lwAioSaveGaEvents === false) {
+		if (lwAioSaveGaEvents === false || !window.lwAioHasConsent || !window.lwAioHasConsent('analytics')) {
 			return;
 		}
 
@@ -19,6 +19,7 @@
 	}
 
 	function lwAioSendEvent(gaCategory, gaAction, gaLabel) {
+		if (!window.lwAioHasConsent || !window.lwAioHasConsent('analytics')) { return; }
 		if ($.inArray(lwAioTrackingType, ["UA", "G"]) > -1) {
 			gtag("event", gaAction, {
 				"event_category": gaCategory,

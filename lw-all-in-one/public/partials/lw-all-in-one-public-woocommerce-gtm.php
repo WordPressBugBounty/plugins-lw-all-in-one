@@ -285,6 +285,7 @@ function lwaio_get_purchase_datalayer( $order, $order_items ) {
  * @return array Extended data layer content with WooCommerce data added.
  */
 function lwaio_woocommerce_datalayer( $data_layer ) {
+    if (!Lw_All_In_One_Security::consent('analytics')) { return $data_layer; }
 
 	if ( array_key_exists( 'HTTP_X_REQUESTED_WITH', $_SERVER ) ) {
 		return $data_layer;
@@ -522,6 +523,7 @@ function lwaio_woocommerce_datalayer( $data_layer ) {
  * @return void
  */
 function lwaio_woocommerce_thankyou( $order_id ) {
+    if (!Lw_All_In_One_Security::consent('analytics')) { return; }
 	/*
 	If this flag is set to true, it means that the puchase event was fired
 	when capturing the is_order_received_page template tag therefore
@@ -559,7 +561,7 @@ function lwaio_woocommerce_thankyou( $order_id ) {
 		echo '
 		<script data-cfasync="false" data-pagespeed-no-defer type="text/javascript">
 			window.dataLayer = window.dataLayer || [];
-			window.dataLayer.push(' . wp_json_encode( $data_layer ) . ');
+			window.dataLayer.push(' . wp_json_encode( $data_layer, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ');
 		</script>';
 
 		if ( ! $do_not_flag_tracked_order ) {
@@ -1138,7 +1140,7 @@ function lwaio_wp_header_begin( $echo = true ) {
 		$lwaio_datalayer_data = lwaio_woocommerce_datalayer([]);
 
 		echo '
-			var dataLayer_content = ' . wp_json_encode( $lwaio_datalayer_data, JSON_UNESCAPED_UNICODE ) . ';';
+			var dataLayer_content = ' . wp_json_encode( $lwaio_datalayer_data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ';';
 
 			// fire WooCommerce order double tracking protection only if WooCommerce is active and user is on the order received page.
 		if ( isset( $woocommerce ) && is_order_received_page() ) {
@@ -1218,7 +1220,7 @@ function lwaio_wp_header_begin( $echo = true ) {
 		}
 
 		echo '
-		dataLayer.push( dataLayer_content );
+		if (window.lwAioHasConsent && window.lwAioHasConsent("analytics")) { dataLayer.push( dataLayer_content ); }
 	</script>';
 }
 

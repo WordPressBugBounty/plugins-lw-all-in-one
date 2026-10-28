@@ -119,64 +119,29 @@ class Lw_All_In_One_Performance_Admin {
    * @return   array              Sanitized settings.
    */
   public function sanitize_settings($input) {
-    if (isset($_POST['option_page']) && $_POST['option_page'] !== 'lw_all_in_one_perf_settings') {
+    if (!isset($_POST['option_page']) || $_POST['option_page'] !== 'lw_all_in_one_perf_settings') {
       return $input;
     }
-
-    // Preserve other fields that might have been validated by previous callbacks
-    $sanitized = is_array($input) ? $input : array();
-
-    if (isset($input['perf_fields'])) {
-      $perf_fields = array();
-
-      // Sanitize checkbox fields
-      $checkbox_fields = array(
-        'perf_webp',
-        'perf_critical_css',
-        'perf_defer_js',
-        'perf_remove_emoji',
-        'perf_disable_xmlrpc',
-        'perf_limit_heartbeat',
-        'perf_remove_version',
-        'perf_remove_query_strings',
-        'perf_preload',
-        'perf_dns_prefetch',
-        'perf_lazy_load',
-        'perf_minify_html',
-      );
-
-      foreach ($checkbox_fields as $field) {
-        $perf_fields[$field] = (isset($input['perf_fields'][$field]) && $input['perf_fields'][$field] === 'on') ? 'on' : 'off';
-      }
-
-      // Sanitize text fields
-      if (isset($input['perf_fields']['webp_quality'])) {
-        $perf_fields['webp_quality'] = absint($input['perf_fields']['webp_quality']);
-        $perf_fields['webp_quality'] = max(50, min(100, $perf_fields['webp_quality']));
-      }
-
-      if (isset($input['perf_fields']['no_defer_scripts'])) {
-        $perf_fields['no_defer_scripts'] = sanitize_text_field($input['perf_fields']['no_defer_scripts']);
-      }
-
-      if (isset($input['perf_fields']['preload_fonts'])) {
-        $perf_fields['preload_fonts'] = sanitize_textarea_field($input['perf_fields']['preload_fonts']);
-      }
-
-      if (isset($input['perf_fields']['dns_prefetch_domains'])) {
-        $perf_fields['dns_prefetch_domains'] = sanitize_textarea_field($input['perf_fields']['dns_prefetch_domains']);
-      }
-      
-      $sanitized['perf_fields'] = $perf_fields;
-    } else {
-      // If perf_fields is not submitted, make sure we don't lose it from existing options
-      $existing = get_option('lw_all_in_one', array());
-      if (isset($existing['perf_fields'])) {
-        $sanitized['perf_fields'] = $existing['perf_fields'];
-      }
+    $existing = get_option('lw_all_in_one', array());
+    $existing = is_array($existing) ? $existing : array();
+    if (current_user_can('manage_options') && is_array($input['perf_fields'] ?? null)) {
+      $existing['perf_fields'] = self::sanitize_fields($input['perf_fields']);
     }
+    return $existing;
+  }
 
-    return $sanitized;
+  /** One allowlisted schema, safe to run repeatedly or in either filter order. */
+  public static function sanitize_fields($fields) {
+    $clean = array();
+    foreach (array('perf_webp', 'perf_critical_css', 'perf_defer_js', 'perf_remove_emoji', 'perf_disable_xmlrpc', 'perf_limit_heartbeat', 'perf_remove_version', 'perf_remove_query_strings', 'perf_preload', 'perf_dns_prefetch', 'perf_lazy_load', 'perf_minify_html') as $field) {
+      $clean[$field] = ($fields[$field] ?? '') === 'on' ? 'on' : 'off';
+    }
+    $quality = is_scalar($fields['webp_quality'] ?? null) ? absint($fields['webp_quality']) : 85;
+    $clean['webp_quality'] = max(50, min(100, $quality));
+    $clean['no_defer_scripts'] = sanitize_text_field($fields['no_defer_scripts'] ?? '');
+    $clean['preload_fonts'] = sanitize_textarea_field($fields['preload_fonts'] ?? '');
+    $clean['dns_prefetch_domains'] = sanitize_textarea_field($fields['dns_prefetch_domains'] ?? '');
+    return $clean;
   }
 
   /**
