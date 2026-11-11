@@ -409,7 +409,7 @@ PEM;
     if ($wim_activate === 'on' && $wim_fields_verification_status === 'verified' && $wim_fields_rag_soc !== '') {
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--longitude',
-        'category' => 'analytics',
+        'category' => 'necessary',
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
@@ -417,7 +417,7 @@ PEM;
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--latitude',
-        'category' => 'analytics',
+        'category' => 'necessary',
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
@@ -425,7 +425,7 @@ PEM;
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--country_name',
-        'category' => 'analytics',
+        'category' => 'necessary',
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
@@ -433,7 +433,7 @@ PEM;
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--country_code',
-        'category' => 'analytics',
+        'category' => 'necessary',
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
@@ -441,7 +441,7 @@ PEM;
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--ip_address',
-        'category' => 'analytics',
+        'category' => 'necessary',
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
@@ -497,7 +497,7 @@ PEM;
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-jsSession--page_before_refresh',
-        'category' => 'analytics',
+        'category' => 'necessary',
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
@@ -505,7 +505,7 @@ PEM;
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-current_url',
-        'category' => 'analytics',
+        'category' => 'necessary',
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',
@@ -513,7 +513,7 @@ PEM;
       ]);
       array_push($cookies, [
         'name' => 'ultimate_support_chat-ref_url',
-        'category' => 'analytics',
+        'category' => 'necessary',
         'domain' => 'www.localweb.it',
         'duration' => 'session',
         'type' => 'HTML',

@@ -41,6 +41,9 @@ For more information, updates, and support, please visit [LocalWeb's official we
 
 == Changelog ==
 
+= 1.10.7 =
+* Web Instant Messenger: load chat widget and ensure script element appends to body.
+
 = 1.10.6 =
 * Security: require authorized requests for legacy cleanup and privacy-page changes; protect executable settings across all forms.
 * Security: SSO adds durable atomic one-time token replay prevention, cryptographic domain binding, administrator permission enforcement, and optional account-mapping configuration.

@@ -26,7 +26,7 @@
     script.id = id;
     script.src = url;
     script.async = true;
-    document.head.appendChild(script);
+    (document.body || document.head).appendChild(script);
   }
 
   window.gtag('consent', 'default', {
@@ -61,13 +61,10 @@
         loadScript('google', 'https://www.googletagmanager.com/' + (isContainer ? 'gtm.js?id=' : 'gtag/js?id=') + encodeURIComponent(config.trackingId));
       }
     }
-    // The external widget includes optional analytics/location functionality.
-    // Require all optional purposes until the provider offers isolated modes.
-    if (config.chat && analytics && marketing && window.lwAioHasConsent('preferences')) {
+    // Chat widget: loaded independently of cookie consent.
+    if (config.chat) {
       window.WidgetId = 'USC_WIDGET';
       loadScript('ultimate_support_chat', 'https://www.localweb.it/chat/widget/ultimate_chat_widget.js');
-    } else if (loaded.ultimate_support_chat) {
-      window.location.reload();
     }
   }
 
@@ -81,7 +78,7 @@
     });
     // Already executed third-party code cannot be unloaded safely. Reload into
     // a denied page after the banner has persisted the visitor's refusal.
-    if (loaded.google || loaded.ultimate_support_chat) { window.location.reload(); }
+    if (loaded.google) { window.location.reload(); }
   });
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', update, { once: true });
